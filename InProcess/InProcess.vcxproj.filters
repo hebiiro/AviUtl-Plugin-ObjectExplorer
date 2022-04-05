@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="リソース">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{79bae488-39c4-4741-beda-1e2ee6428bed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="auls">
+      <UniqueIdentifier>{d49c9d80-38de-4842-a451-b102f0f07e88}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>リソース</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="..\Common\MyTracer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\ObjectExplorer.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="InProcess.h" />
+    <ClInclude Include="..\Common\MyWinUtility.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="InProcess_Hook.h" />
+    <ClInclude Include="..\AviUtl\aulslib\aviutl.h">
+      <Filter>auls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AviUtl\aulslib\exedit.h">
+      <Filter>auls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AviUtl\aulslib\lua.h">
+      <Filter>auls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AviUtl\aulslib\memref.h">
+      <Filter>auls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AviUtl\aulslib\memref2.h">
+      <Filter>auls</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="InProcess.cpp" />
+    <ClCompile Include="InProcess_Filter.cpp" />
+    <ClCompile Include="InProcess_Hook.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="InProcess.rc">
+      <Filter>リソース</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
