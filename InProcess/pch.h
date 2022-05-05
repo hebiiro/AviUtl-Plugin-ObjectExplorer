@@ -2,10 +2,13 @@
 
 #include "framework.h"
 
-#include "../Common/MyTracer.h"
-#include "../Common/MyWinUtility.h"
-#include "../Common/ObjectExplorer.h"
-typedef const BYTE* LPCBYTE;
-#include "../AviUtl/aulslib/exedit.h"
-#include "../Detours.4.0.1/detours.h"
-#pragma comment(lib, "../Detours.4.0.1/detours.lib")
+#include "AviUtl/aviutl_plugin_sdk/filter.h"
+#include "AviUtl/aviutl_exedit_sdk/aviutl.hpp"
+#include "AviUtl/aviutl_exedit_sdk/exedit.hpp"
+#include "Common/Tracer.h"
+#include "Common/WinUtility.h"
+#include "Common/Hook.h"
+#include "Common/AviUtlInternal.h"
+#include "Common/ObjectExplorer.h"
+#include "Detours.4.0.1/detours.h"
+#pragma comment(lib, "Detours.4.0.1/detours.lib")

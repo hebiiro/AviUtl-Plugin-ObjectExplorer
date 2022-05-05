@@ -10,9 +10,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\MyTracer.h">
-      <Filter>Common</Filter>
-    </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>リソース</Filter>
     </ClInclude>
@@ -24,19 +21,22 @@
     <ClInclude Include="..\Common\ObjectExplorer.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\MyTracer2.h">
+    <ClInclude Include="..\..\Common\Gdiplus.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\MyToolBox.h">
+    <ClInclude Include="..\..\Common\MFC.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\MyGdiplus.h">
+    <ClInclude Include="..\..\Common\MSXML.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\MyMFC.h">
+    <ClInclude Include="..\..\Common\Tracer.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\MyWinUtility.h">
+    <ClInclude Include="..\..\Common\Tracer2.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\WinUtility.h">
       <Filter>Common</Filter>
     </ClInclude>
   </ItemGroup>

@@ -123,6 +123,7 @@ public:
 	DWORD m_cookie;
 	CString m_currentFolderPath;
 	CComboBox m_url;
+	BOOL m_isSettingsLoaded;
 
 public:
 

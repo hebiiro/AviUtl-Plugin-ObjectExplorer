@@ -7,6 +7,12 @@
 //---------------------------------------------------------------------
 EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable(void)
 {
+	static TCHAR name[MAX_PATH] = {};
+	::StringCbCopy(name, sizeof(name), _T("オブジェクトエクスプローラ"));
+
+	static TCHAR information[MAX_PATH] = {};
+	::StringCbCopy(information, sizeof(information), _T("オブジェクトエクスプローラ 2.0.0 by 蛇色"));
+
 	static FILTER_DLL filter =
 	{
 		FILTER_FLAG_ALWAYS_ACTIVE |
@@ -16,7 +22,7 @@ EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable(void)
 		FILTER_FLAG_DISP_FILTER |
 		FILTER_FLAG_EX_INFORMATION,
 		400, 400,
-		theApp.m_name,
+		name,
 		NULL, NULL, NULL,
 		NULL, NULL,
 		NULL, NULL, NULL,
@@ -28,7 +34,7 @@ EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable(void)
 		NULL, NULL,
 		NULL,
 		NULL,
-		theApp.m_information,
+		information,
 		NULL, NULL,
 		NULL, NULL, NULL, NULL,
 		NULL,
@@ -45,6 +51,8 @@ BOOL func_init(FILTER *fp)
 {
 	MY_TRACE(_T("func_init()\n"));
 
+	initHook(fp);
+
 	return theApp.init(fp);
 }
 
@@ -54,6 +62,8 @@ BOOL func_init(FILTER *fp)
 BOOL func_exit(FILTER *fp)
 {
 	MY_TRACE(_T("func_exit()\n"));
+
+	termHook(fp);
 
 	return theApp.exit(fp);
 }
@@ -96,8 +106,6 @@ BOOL func_WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *e
 	case WM_FILTER_CHANGE_WINDOW:
 		{
 			MY_TRACE(_T("func_WndProc(WM_FILTER_CHANGE_WINDOW)\n"));
-
-			initExeditHook();
 
 			if (fp->exfunc->is_filter_window_disp(fp))
 			{

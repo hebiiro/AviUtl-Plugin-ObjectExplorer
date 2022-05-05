@@ -1,6 +1,7 @@
 ﻿# AviUtl プラグイン - オブジェクトエクスプローラ
 
-* version 1.0.0 by 蛇色 - 2022/04/05 初版
+* 2.0.0 by 蛇色 - 2022/04/05 リファクタリング
+* 1.0.0 by 蛇色 - 2022/04/05 初版
 
 エクスプローラを表示してエイリアス、オブジェクト、素材ファイルを使いやすくします。
 
@@ -62,9 +63,10 @@ ObjectExplorerSettings.xml をテキストエディタで編集します。
 ## 動作確認
 
 * (必須) AviUtl 1.10 & 拡張編集 0.92 http://spring-fragrance.mints.ne.jp/aviutl/
-* (共存確認) patch.aul r16 https://www.nicovideo.jp/watch/sm40087155
+* (共存確認) patch.aul r21 https://scrapbox.io/ePi5131/patch.aul
 
-## 参考サイト
+## クレジット
 
-* Auls https://auls.client.jp/
-	* yulib、aulslib を使用しています。
+* Microsoft Research Detours Package https://github.com/microsoft/Detours
+* aviutl_exedit_sdk https://github.com/ePi5131/aviutl_exedit_sdk
+* Common Library https://github.com/hebiiro/Common-Library

@@ -16,8 +16,6 @@ void ___outputLog(LPCTSTR text, LPCTSTR output)
 
 CInProcessApp::CInProcessApp()
 {
-	::ZeroMemory(m_name, sizeof(m_name));
-	::ZeroMemory(m_information, sizeof(m_information));
 	m_instance = 0;
 	::ZeroMemory(&m_pi, sizeof(m_pi));
 	m_browser = 0;
@@ -33,14 +31,6 @@ void CInProcessApp::dllInit(HINSTANCE instance)
 
 	m_instance = instance;
 	MY_TRACE_HEX(m_instance);
-
-	::GetModuleFileName(m_instance, m_name, MAX_PATH);
-	::PathStripPath(m_name);
-	::PathRemoveExtension(m_name);
-	MY_TRACE_TSTR(m_name);
-
-	::StringCbCopy(m_information, sizeof(m_information), _T("オブジェクトエクスプローラ version 1.0.0 by 蛇色"));
-	MY_TRACE_TSTR(m_information);
 }
 
 BOOL CInProcessApp::init(FILTER *fp)
@@ -69,11 +59,16 @@ BOOL CInProcessApp::createSubProcess(FILTER *fp)
 {
 	MY_TRACE(_T("CInProcessApp::createSubProcess()\n"));
 
+	TCHAR fileSpec[MAX_PATH] = {};
+	::GetModuleFileName(m_instance, fileSpec, MAX_PATH);
+	::PathStripPath(fileSpec);
+	MY_TRACE_TSTR(fileSpec);
+
 	TCHAR path[MAX_PATH] = {};
 	::GetModuleFileName(m_instance, path, MAX_PATH);
 	::PathRemoveExtension(path);
-	::PathAppend(path, m_name);
-	::PathAddExtension(path, _T(".exe"));
+	::PathAppend(path, fileSpec);
+	::PathRenameExtension(path, _T(".exe"));
 	MY_TRACE_TSTR(path);
 
 	TCHAR args[MAX_PATH] = {};

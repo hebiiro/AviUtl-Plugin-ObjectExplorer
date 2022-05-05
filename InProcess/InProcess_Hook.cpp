@@ -4,115 +4,35 @@
 
 //--------------------------------------------------------------------
 
-BOOL g_loadAlias = FALSE;
-std::vector<std::string> g_aliasFileNames;
+AviUtlInternal g_auin;
+
+BOOL g_loadAlias = FALSE; // 独自のエイリアス読み込み処理を行うためのフラグ。
+std::vector<std::string> g_aliasFileNames; // エイリアス読み込みに使用するファイル名の配列。
 
 //--------------------------------------------------------------------
 
-IMPLEMENT_INTERNAL_PROC(BOOL,  CDECL, Exedit_SaveFilterAlias, (int objectIndex, int filterIndex, LPCSTR fileName));
-
-HWND* g_exeditWindow = 0;
-HWND* g_settingDialog = 0;
-auls::EXEDIT_OBJECT** g_objectData = 0; // オブジェクトデータへのポインタ。
-BYTE** g_objectExdata = 0; // オブジェクト拡張データへのポインタ。
-auls::EXEDIT_FILTER** g_filterTable = 0; // フィルタ配列。
-int* g_objectIndex = 0; // カレントオブジェクトのインデックスへのポインタ。
-int* g_filterIndex = 0; // カレントフィルタのインデックスへのポインタ。
-int* g_nextObject = 0; // 次のオブジェクトの配列へのポインタ。
-int* g_selectedObjects = 0;
-int* g_selectedObjectsCount = 0;
-
-//--------------------------------------------------------------------
-
-HWND Exedit_GetWindow()
+// フックをセットする。
+void initHook(FILTER* fp)
 {
-	return *g_exeditWindow;
-}
+	MY_TRACE(_T("initHook()\n"));
 
-HWND Exedit_SettingDialog()
-{
-	return *g_settingDialog;
-}
-
-int Exedit_GetCurrentObjectIndex()
-{
-	return *g_objectIndex;
-}
-
-int Exedit_GetCurrentFilterIndex()
-{
-	return *g_filterIndex;
-}
-
-auls::EXEDIT_OBJECT* Exedit_GetObject(int objectIndex)
-{
-	return *g_objectData + objectIndex;
-}
-
-auls::EXEDIT_FILTER* Exedit_GetFilter(int filterId)
-{
-	return g_filterTable[filterId];
-}
-
-auls::EXEDIT_FILTER* Exedit_GetFilter(auls::EXEDIT_OBJECT* object, int filterIndex)
-{
-	if (!object) return 0;
-	int id = object->filter_param[filterIndex].id;
-	if (id < 0) return 0;
-	return Exedit_GetFilter(id);
-}
-
-int Exedit_GetNextObjectIndex(int objectIndex)
-{
-	return g_nextObject[objectIndex];
-}
-
-int Exedit_GetSelectedObjects(int i)
-{
-	return g_selectedObjects[i];
-}
-
-int Exedit_GetSelectedObjectsCount()
-{
-	return *g_selectedObjectsCount;
-}
-
-//--------------------------------------------------------------------
-
-// 拡張編集のフックをセットする。
-void initExeditHook()
-{
-	MY_TRACE(_T("initExeditHook()\n"));
-
-	if (g_settingDialog)
-		return;
+	g_auin.init();
 
 	// 拡張編集の関数や変数を取得する。
 	DWORD exedit = (DWORD)::GetModuleHandle(_T("exedit.auf"));
-	g_exeditWindow = (HWND*)(exedit + 0x177A44);
-	g_settingDialog = (HWND*)(exedit + 0x1539C8);
-	g_objectData = (auls::EXEDIT_OBJECT**)(exedit + 0x1E0FA4);
-	g_objectExdata = (BYTE**)(exedit + 0x1E0FA8);
-	g_filterTable = (auls::EXEDIT_FILTER**)(exedit + 0x187C98);
-	g_objectIndex = (int*)(exedit + 0x177A10);
-	g_filterIndex = (int*)(exedit + 0x14965C);
-	g_nextObject = (int*)(exedit + 0x1592d8);
-	g_selectedObjects = (int*)(exedit + 0x179230);
-	g_selectedObjectsCount = (int*)(exedit + 0x167D88);
-	true_Exedit_WndProc = (Type_Exedit_WndProc)(exedit + 0x3B620);
-	true_Exedit_SettingDialog_WndProc = (Type_Exedit_SettingDialog_WndProc)(exedit + 0x2CDE0);
-	true_Exedit_GetAliasFileName = (Type_Exedit_GetAliasFileName)(exedit + 0x43FD0);
-	true_Exedit_AddAlias = (Type_Exedit_AddAlias)(exedit + 0x29DC0);
-	Exedit_SaveFilterAlias = (Type_Exedit_SaveFilterAlias)(exedit + 0x28CA0);
+//	true_ExeditWindowProc = (Type_ExeditWindowProc)(exedit + 0x3B620);
+//	true_SettingDialogProc = (Type_SettingDialogProc)(exedit + 0x2CDE0);
+	true_ExeditWindowProc = g_auin.HookExeditWindowProc(fp, hook_ExeditWindowProc);
+	true_SettingDialogProc = g_auin.HookSettingDialogProc(hook_SettingDialogProc);
+	true_AddAlias = g_auin.GetAddAlias();
 
 	// 拡張編集の関数をフックする。
 	DetourTransactionBegin();
 	DetourUpdateThread(::GetCurrentThread());
 
-	ATTACH_HOOK_PROC(Exedit_WndProc);
-	ATTACH_HOOK_PROC(Exedit_SettingDialog_WndProc);
-	ATTACH_HOOK_PROC(Exedit_GetAliasFileName);
-	ATTACH_HOOK_PROC(Exedit_AddAlias);
+//	ATTACH_HOOK_PROC(ExeditWindowProc);
+//	ATTACH_HOOK_PROC(SettingDialogProc);
+	ATTACH_HOOK_PROC(AddAlias);
 
 	if (DetourTransactionCommit() == NO_ERROR)
 	{
@@ -124,17 +44,27 @@ void initExeditHook()
 	}
 }
 
+// フックを解除する。
+void termHook(FILTER* fp)
+{
+	MY_TRACE(_T("termHook()\n"));
+}
+
+// カレントオブジェクトに関連するファイルパスを取得する。
 void getPath(LPTSTR buffer)
 {
-	int objectIndex = Exedit_GetCurrentObjectIndex();
+	// カレントオブジェクトを取得する。
+	int objectIndex = g_auin.GetCurrentObjectIndex();
 	if (objectIndex < 0) return;
-	auls::EXEDIT_OBJECT* object = Exedit_GetObject(objectIndex);
+	ExEdit::Object* object = g_auin.GetObject(objectIndex);
 	if (!object) return;
 
+	// 先頭のフィルタを取得する。
 	int filterIndex = 0;
-	auls::EXEDIT_FILTER* filter = Exedit_GetFilter(object, filterIndex);
+	ExEdit::Filter* filter = g_auin.GetFilter(object, filterIndex);
 	if (!filter) return;
 
+	// 拡張データへのオフセットとサイズを取得する。
 	int offset = -1, size = -1;
 	int id = object->filter_param[filterIndex].id;
 	switch (id)
@@ -146,41 +76,50 @@ void getPath(LPTSTR buffer)
 	case 82: offset = 0; size = 260; break; // 動画ファイル合成
 	case 83: offset = 4; size = 256; break; // 画像ファイル合成
 	}
-	if (size <= 0) return;
+	if (size <= 0) return; // サイズを取得できなかった場合は何もしない。
 
-	BYTE* exdataTable = *g_objectExdata;
-	DWORD exoffset = object->ExdataOffset(filterIndex);
-	BYTE* exdata = exdataTable + exoffset + 0x0004;
+	// 拡張データからファイル名を取得する。
+	BYTE* exdata = g_auin.GetExdata(object, filterIndex);
 	LPCSTR fileName = (LPCSTR)(exdata + offset);
 
+	// 整形してバッファに格納する。
 	::StringCchPrintf(buffer, MAX_PATH, _T("%hs"), fileName);
 	::PathRemoveFileSpec(buffer);
 }
 
+// エイリアスファイル名の配列を消去する。
 void clearAliasFile()
 {
 	g_aliasFileNames.clear();
 }
 
+// エイリアスファイルを読み込み、フィルタ毎に分解する。
+// そして、それぞれのフィルタを一時ファイルに保存し、そのファイル名を配列に追加する。
 BOOL addAliasFile(LPCSTR fileName)
 {
+	// 戻り値。
 	BOOL retValue = FALSE;
 
+	// テンポラリフォルダのパス。
 	char tempPath[MAX_PATH] = {};
 	::GetTempPathA(MAX_PATH, tempPath);
 	MY_TRACE_STR(tempPath);
 
+	// カレントプロセスの ID。
 	DWORD pid = ::GetCurrentProcessId();
 	MY_TRACE_INT(pid);
 
+	// ini ファイル内のセクションを読み込むためのバッファ。
 	std::vector<char> section;
 
-	for (int i = 0; i < auls::EXEDIT_OBJECT::MAX_FILTER; i++)
+	for (int i = 0; i < ExEdit::Object::MAX_FILTER; i++)
 	{
+		// セクションの appName を取得する。
 		char appName[MAX_PATH] = {};
-		::StringCbPrintfA(appName, sizeof(appName), _T("vo.%d"), i);
+		::StringCbPrintfA(appName, sizeof(appName), "vo.%d", i);
 		MY_TRACE_TSTR(appName);
 
+		// セクション内の _name を取得し、読み込み可能なフィルタかチェックする。
 		char name[MAX_PATH] = {};
 		::GetPrivateProfileStringA(appName, "_name", "", name, MAX_PATH, fileName);
 		MY_TRACE_TSTR(name);
@@ -204,24 +143,29 @@ BOOL addAliasFile(LPCSTR fileName)
 		else if (::lstrcmpA(name, "グループ制御") == 0) continue;
 		else if (::lstrcmpA(name, "カメラ制御") == 0) continue;
 
+		// セクションデータを取得する。
 		section.clear();
 		section.resize(32767, 0);
 		DWORD size = ::GetPrivateProfileSectionA(appName, section.data(), section.size(), fileName);
 		section.resize(size);
 		std::replace(section.begin(), section.end(), '\0', '\n');
 
+		// セクションのヘッダー。
 		char sectionHeader[MAX_PATH] = {};
 		::StringCbPrintfA(sectionHeader, sizeof(sectionHeader), "[vo.0]\n");
 		MY_TRACE_STR(sectionHeader);
 
+		// 一時ファイルのファイル名。
 		char tempFileName[MAX_PATH] = {};
-		::StringCbPrintfA(tempFileName, sizeof(tempFileName), _T("%s\\AviUtl_ObjectExplorer_%d_%d.exa"), tempPath, pid, i);
+		::StringCbPrintfA(tempFileName, sizeof(tempFileName), "%s\\AviUtl_ObjectExplorer_%d_%d.exa", tempPath, pid, i);
 		MY_TRACE_STR(tempFileName);
 
+		// 一時ファイルにセクションヘッダーとセクションデータを書き込む。
 		Handle file = createFileForWrite(tempFileName);
 		writeFile(file, sectionHeader);
 		writeFile(file, section.data(), section.size());
 
+		// 配列に一時ファイルのファイル名を追加する。
 		g_aliasFileNames.push_back(tempFileName);
 
 		retValue = TRUE;
@@ -230,34 +174,37 @@ BOOL addAliasFile(LPCSTR fileName)
 	return retValue;
 }
 
+// アイテムにエイリアスを追加する。
+// WM_DROPFILES のタイミングで呼ばれる。
 void loadAlias()
 {
 	MY_TRACE(_T("loadAlias()\n"));
 
 	g_loadAlias = TRUE;
-	::SendMessage(Exedit_GetWindow(), WM_COMMAND, 1036, 1);
+	// この中で AddAlias() が呼ばれるのでフックする。
+	// 1036 はエイリアスを追加するコマンド。1 はエイリアスのインデックス。
+	::SendMessage(g_auin.GetExeditWindow(), WM_COMMAND, 1036, 1);
 	g_loadAlias = FALSE;
 }
 
-LPCSTR getName(auls::EXEDIT_OBJECT* object, int filterIndex)
+// フィルタの名前を取得する。
+LPCSTR getName(ExEdit::Object* object, int filterIndex)
 {
 	if (filterIndex < 0)
 	{
-		if (::lstrlenA(object->dispname))
+		if (object->dispname[0])
 			return object->dispname;
 
 		filterIndex = 0;
 	}
 
-	auls::EXEDIT_FILTER* filter = Exedit_GetFilter(object, filterIndex);
+	ExEdit::Filter* filter = g_auin.GetFilter(object, filterIndex);
 	if (!filter) return "";
 
 	int id = object->filter_param[filterIndex].id;
 	if (id == 79) // アニメーション効果
 	{
-		BYTE* exdataTable = *g_objectExdata;
-		DWORD offset = object->ExdataOffset(filterIndex);
-		BYTE* exdata = exdataTable + offset + 0x0004;
+		BYTE* exdata = g_auin.GetExdata(object, filterIndex);
 		LPCSTR name = (LPCSTR)(exdata + 0x04);
 		if (!name[0])
 		{
@@ -301,9 +248,7 @@ LPCSTR getName(auls::EXEDIT_OBJECT* object, int filterIndex)
 	}
 	else if (id == 80) // カスタムオブジェクト
 	{
-		BYTE* exdataTable = *g_objectExdata;
-		DWORD offset = object->ExdataOffset(filterIndex);
-		BYTE* exdata = exdataTable + offset + 0x0004;
+		BYTE* exdata = g_auin.GetExdata(object, filterIndex);
 		LPCSTR name = (LPCSTR)(exdata + 0x04);
 		if (!name[0]) name = "カスタムオブジェクト";
 		return name;
@@ -314,6 +259,7 @@ LPCSTR getName(auls::EXEDIT_OBJECT* object, int filterIndex)
 	}
 }
 
+// ファイル選択ダイアログを出してフィルタをエイリアスファイルに保存する。
 BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 {
 	MY_TRACE(_T("saveAlias(0x%08X, %d, %d)\n"), hwnd, objectIndex, filterIndex);
@@ -325,7 +271,7 @@ BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 
 	::GetWindowText(theApp.m_browser, folderName, MAX_PATH);
 
-	auls::EXEDIT_OBJECT* object = Exedit_GetObject(objectIndex);
+	ExEdit::Object* object = g_auin.GetObject(objectIndex);
 	if (!object) return FALSE;
 
 	LPCSTR name = getName(object, filterIndex);
@@ -368,12 +314,12 @@ BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 	if (!::GetSaveFileName(&ofn))
 		return FALSE;
 
-	return Exedit_SaveFilterAlias(objectIndex, filterIndex, fileName);
+	return g_auin.SaveFilterAlias(objectIndex, filterIndex, fileName);
 }
 
 //--------------------------------------------------------------------
 
-IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, Exedit_WndProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *editp, FILTER *fp))
+IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExeditWindowProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *editp, FILTER *fp))
 {
 	switch (message)
 	{
@@ -385,9 +331,9 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, Exedit_WndProc, (HWND hwnd, UINT messag
 				{
 					MY_TRACE(_T("エイリアスを作成します\n"));
 
-					if (Exedit_GetSelectedObjectsCount() > 0)
+					if (g_auin.GetSelectedObjectsCount() > 0)
 					{
-						int objectIndex = Exedit_GetSelectedObjects(0);
+						int objectIndex = g_auin.GetSelectedObjects(0);
 
 						saveAlias(hwnd, objectIndex, -2);
 					}
@@ -400,10 +346,10 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, Exedit_WndProc, (HWND hwnd, UINT messag
 		}
 	}
 
-	return true_Exedit_WndProc(hwnd, message, wParam, lParam, editp, fp);
+	return true_ExeditWindowProc(hwnd, message, wParam, lParam, editp, fp);
 }
 
-IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, Exedit_SettingDialog_WndProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))
+IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, SettingDialogProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))
 {
 	switch (message)
 	{
@@ -415,8 +361,8 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, Exedit_SettingDialog_WndProc, (HWND hw
 				{
 					MY_TRACE(_T("エイリアスを作成します\n"));
 
-					int objectIndex = Exedit_GetCurrentObjectIndex();
-					int filterIndex = Exedit_GetCurrentFilterIndex();
+					int objectIndex = g_auin.GetCurrentObjectIndex();
+					int filterIndex = g_auin.GetCurrentFilterIndex();
 
 					if (filterIndex <= 0)
 					{
@@ -464,29 +410,24 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, Exedit_SettingDialog_WndProc, (HWND hw
 		}
 	}
 
-	return true_Exedit_SettingDialog_WndProc(hwnd, message, wParam, lParam);
+	return true_SettingDialogProc(hwnd, message, wParam, lParam);
 }
 
-IMPLEMENT_HOOK_PROC_NULL(LPCSTR, CDECL, Exedit_GetAliasFileName, (int aliasId))
+IMPLEMENT_HOOK_PROC_NULL(BOOL, CDECL, AddAlias, (LPCSTR fileName, BOOL flag1, BOOL flag2, int objectIndex))
 {
-	MY_TRACE(_T("Exedit_GetAliasFileName(%d)\n"), aliasId);
-
-	return true_Exedit_GetAliasFileName(aliasId);
-}
-
-IMPLEMENT_HOOK_PROC_NULL(BOOL, CDECL, Exedit_AddAlias, (LPCSTR fileName, BOOL flag1, BOOL flag2, int objectIndex))
-{
-	MY_TRACE(_T("Exedit_AddAlias(%s, %d, %d, %d)\n"), fileName, flag1, flag2, objectIndex);
+	MY_TRACE(_T("AddAlias(%s, %d, %d, %d)\n"), fileName, flag1, flag2, objectIndex);
 
 	if (g_loadAlias)
 	{
+		// フラグが立っている場合はエイリアスファイル名の配列を使用する。
+
 		BOOL retValue = FALSE;
 
 		for (auto fileName : g_aliasFileNames)
 		{
 			MY_TRACE_STR(fileName.c_str());
 
-			retValue |= true_Exedit_AddAlias(fileName.c_str(), flag1, flag2, objectIndex);
+			retValue |= true_AddAlias(fileName.c_str(), flag1, flag2, objectIndex);
 
 			::DeleteFileA(fileName.c_str());
 		}
@@ -494,7 +435,7 @@ IMPLEMENT_HOOK_PROC_NULL(BOOL, CDECL, Exedit_AddAlias, (LPCSTR fileName, BOOL fl
 		return retValue;
 	}
 
-	return true_Exedit_AddAlias(fileName, flag1, flag2, objectIndex);
+	return true_AddAlias(fileName, flag1, flag2, objectIndex);
 }
 
 //--------------------------------------------------------------------

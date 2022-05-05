@@ -33,6 +33,7 @@ COutProcessDialog::COutProcessDialog(CWnd* parent)
 	MY_TRACE(_T("COutProcessDialog::COutProcessDialog()\n"));
 
 	m_cookie = 0;
+	m_isSettingsLoaded = FALSE;
 }
 
 COutProcessDialog::~COutProcessDialog()
@@ -101,7 +102,7 @@ void COutProcessDialog::loadSettings()
 		MSXML2::IXMLDOMElementPtr element = document->documentElement;
 
 		_bstr_t path;
-		GetPrivateProfileBSTR(element, L"path", path);
+		getPrivateProfileString(element, L"path", path);
 		MY_TRACE_WSTR((BSTR)path);
 		if ((BSTR)path)
 		{
@@ -116,16 +117,16 @@ void COutProcessDialog::loadSettings()
 				MSXML2::IXMLDOMElementPtr element = nodeList->item[i];
 
 				int x = 0, y = 0, w = 0, h = 0;
-				GetPrivateProfileInt(element, L"x", x);
-				GetPrivateProfileInt(element, L"y", y);
-				GetPrivateProfileInt(element, L"w", w);
-				GetPrivateProfileInt(element, L"h", h);
+				getPrivateProfileInt(element, L"x", x);
+				getPrivateProfileInt(element, L"y", y);
+				getPrivateProfileInt(element, L"w", w);
+				getPrivateProfileInt(element, L"h", h);
 
 				if (w > 0 && h > 0)
 					MoveWindow(x, y, w, h);
 
 				BOOL show = FALSE;
-				GetPrivateProfileInt(element, L"show", show);
+				getPrivateProfileInt(element, L"show", show);
 				ShowWindow(show ? SW_SHOW : SW_HIDE);
 			}
 		}
@@ -138,7 +139,7 @@ void COutProcessDialog::loadSettings()
 				MSXML2::IXMLDOMElementPtr element = nodeList->item[i];
 
 				_bstr_t path;
-				GetPrivateProfileBSTR(element, L"path", path);
+				getPrivateProfileString(element, L"path", path);
 				MY_TRACE_WSTR((BSTR)path);
 				if ((BSTR)path)
 				{
@@ -146,6 +147,8 @@ void COutProcessDialog::loadSettings()
 				}
 			}
 		}
+
+		m_isSettingsLoaded = TRUE;
 	}
 	catch (_com_error& e)
 	{
@@ -156,6 +159,13 @@ void COutProcessDialog::loadSettings()
 void COutProcessDialog::saveSettings()
 {
 	MY_TRACE(_T("COutProcessDialog::saveSettings()\n"));
+
+	if (!m_isSettingsLoaded)
+	{
+		MY_TRACE(_T("初期化に失敗しているので保存処理をスキップします\n"));
+
+		return;
+	}
 
 	WCHAR filePath[MAX_PATH] = {};
 	::GetModuleFileNameW(AfxGetInstanceHandle(), filePath, MAX_PATH);
@@ -169,22 +179,22 @@ void COutProcessDialog::saveSettings()
 
 		MSXML2::IXMLDOMElementPtr parentElement = appendElement(document, document, L"ObjectExplorerSettings");
 
-		SetPrivateProfileString(parentElement, L"path", (LPCTSTR)m_currentFolderPath);
+		setPrivateProfileString(parentElement, L"path", (LPCTSTR)m_currentFolderPath);
 
 		{
 			MSXML2::IXMLDOMElementPtr element = appendElement(document, parentElement, L"window");
 
-			SetPrivateProfileInt(element, L"show", IsWindowVisible());
+			setPrivateProfileInt(element, L"show", IsWindowVisible());
 
 			CRect rc; GetWindowRect(&rc);
 			int x = rc.left;
 			int y = rc.top;
 			int w = rc.Width();
 			int h = rc.Height();
-			SetPrivateProfileInt(element, L"x", x);
-			SetPrivateProfileInt(element, L"y", y);
-			SetPrivateProfileInt(element, L"w", w);
-			SetPrivateProfileInt(element, L"h", h);
+			setPrivateProfileInt(element, L"x", x);
+			setPrivateProfileInt(element, L"y", y);
+			setPrivateProfileInt(element, L"w", w);
+			setPrivateProfileInt(element, L"h", h);
 		}
 
 		int c = m_url.GetCount();
@@ -193,7 +203,7 @@ void COutProcessDialog::saveSettings()
 			MSXML2::IXMLDOMElementPtr element = appendElement(document, parentElement, L"favorite");
 
 			CString path; m_url.GetLBText(i, path);
-			SetPrivateProfileString(element, L"path", (LPCTSTR)path);
+			setPrivateProfileString(element, L"path", (LPCTSTR)path);
 		}
 
 		saveXMLDocument(document, filePath);
