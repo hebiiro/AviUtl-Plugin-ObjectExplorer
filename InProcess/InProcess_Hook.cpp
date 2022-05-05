@@ -398,7 +398,7 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, SettingDialogProc, (HWND hwnd, UINT me
 				if (::lstrcmpi(extension, _T(".exa")) == 0)
 					result |= addAliasFile(fileName);
 			}
-			::DragFinish(drop);
+			//::DragFinish(drop); // これを呼ぶとデフォルトの処理が実行できなくなる。
 
 			if (result)
 			{
