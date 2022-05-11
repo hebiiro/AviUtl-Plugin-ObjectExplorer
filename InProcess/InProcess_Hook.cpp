@@ -259,6 +259,32 @@ LPCSTR getName(ExEdit::Object* object, int filterIndex)
 	}
 }
 
+void replaceInvalidChar(LPTSTR fileName)
+{
+	int c = ::lstrlen(fileName);
+	for (int i = 0; i < c; i++)
+	{
+		TCHAR ch = fileName[i];
+#ifndef UNICODE
+		if (::IsDBCSLeadByte(ch))
+		{
+			i++;
+			continue;
+		}
+#endif
+		UINT type = ::PathGetCharType(ch);
+		switch (type)
+		{
+		case GCT_INVALID:
+		case GCT_WILD:
+			{
+				fileName[i] = _T('_');
+				break;
+			}
+		}
+	}
+}
+
 // ファイル選択ダイアログを出してフィルタをエイリアスファイルに保存する。
 BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 {
@@ -300,6 +326,8 @@ BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 			break;
 		}
 	}
+
+	replaceInvalidChar(fileName);
 
 	OPENFILENAME ofn = { sizeof(ofn) };
 	ofn.hwndOwner = hwnd;
