@@ -11,7 +11,7 @@ EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable(void)
 	::StringCbCopy(name, sizeof(name), _T("オブジェクトエクスプローラ"));
 
 	static TCHAR information[MAX_PATH] = {};
-	::StringCbCopy(information, sizeof(information), _T("オブジェクトエクスプローラ 2.0.2 by 蛇色"));
+	::StringCbCopy(information, sizeof(information), _T("オブジェクトエクスプローラ 2.1.0 by 蛇色"));
 
 	static FILTER_DLL filter =
 	{

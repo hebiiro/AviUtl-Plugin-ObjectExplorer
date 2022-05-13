@@ -66,6 +66,26 @@ BOOL COutProcessApp::InitInstance()
 		return FALSE;
 	}
 
+	{
+		// DarkenWindow が存在する場合は読み込む。
+
+		TCHAR fileName[MAX_PATH] = {};
+		::GetModuleFileName(AfxGetInstanceHandle(), fileName, MAX_PATH);
+		::PathRemoveFileSpec(fileName);
+		::PathAppend(fileName, _T("..\\DarkenWindow.aul"));
+		MY_TRACE_TSTR(fileName);
+
+		HMODULE DarkenWindow = ::LoadLibrary(fileName);
+		MY_TRACE_HEX(DarkenWindow);
+
+		typedef void (WINAPI* Type_DarkenWindow_init)();
+		Type_DarkenWindow_init DarkenWindow_init =
+			(Type_DarkenWindow_init)::GetProcAddress(DarkenWindow, "DarkenWindow_init");
+		MY_TRACE_HEX(DarkenWindow_init);
+
+		if (DarkenWindow_init) DarkenWindow_init();
+	}
+
 	// メインダイアログを作成する。
 	CWnd* parent = CWnd::FromHandle(getAviUtlWindow());
 	m_pMainWnd = &m_dialog;
