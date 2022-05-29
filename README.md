@@ -1,5 +1,6 @@
 ﻿# AviUtl プラグイン - オブジェクトエクスプローラ
 
+* 2.2.0 - 2022/05/30 DarkenWindow の仕様変更に対応
 * 2.1.0 - 2022/05/13 DarkenWindow.aul が存在する場合は読み込むように修正
 * 2.0.2 - 2022/05/12 特定のオブジェクト名のときエイリアスの保存ができない問題を修正
 * 2.0.1 - 2022/05/05 設定ダイアログのドラッグアンドドロップでデフォルト処理が実行されない問題を修正
@@ -7,6 +8,10 @@
 * 1.0.0 - 2022/04/05 初版
 
 エクスプローラを表示してエイリアス、オブジェクト、素材ファイルを使いやすくします。
+
+## 免責事項
+
+このプラグインおよび同梱物を使用したことによって生じたすべての障害・損害・不具合等に関しては、私と私の関係者および私の所属するいかなる団体・組織とも、一切の責任を負いません。各自の責任においてご使用ください。
 
 ## ダウンロード
 
@@ -72,10 +77,16 @@ ObjectExplorerSettings.xml をテキストエディタで編集します。
 ## 動作確認
 
 * (必須) AviUtl 1.10 & 拡張編集 0.92 http://spring-fragrance.mints.ne.jp/aviutl/
-* (共存確認) patch.aul r21 https://scrapbox.io/ePi5131/patch.aul
+* (共存確認) patch.aul r28 https://scrapbox.io/ePi5131/patch.aul
 
 ## クレジット
 
 * Microsoft Research Detours Package https://github.com/microsoft/Detours
 * aviutl_exedit_sdk https://github.com/ePi5131/aviutl_exedit_sdk
 * Common Library https://github.com/hebiiro/Common-Library
+
+# 作成者情報
+ 
+* 作成者 - 蛇色 (へびいろ)
+* GitHub - https://github.com/hebiiro
+* Twitter - https://twitter.com/io_hebiiro

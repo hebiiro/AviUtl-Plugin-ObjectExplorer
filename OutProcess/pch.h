@@ -9,5 +9,6 @@
 #include "Common/Gdiplus.h"
 #include "Common/MFC.h"
 #include "Common/WinUtility.h"
+#include "Common/FileUpdateChecker.h"
 #include "Common/ObjectExplorer.h"
 #include "AviUtl/aviutl_plugin_sdk/filter.h"

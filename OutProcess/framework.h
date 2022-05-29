@@ -38,6 +38,7 @@ _COM_SMARTPTR_TYPEDEF(IShellItem, __uuidof(IShellItem));
 #include <tchar.h>
 #include <strsafe.h>
 #include <memory>
+#include <list>
 #include <map>
 #include <regex>
 

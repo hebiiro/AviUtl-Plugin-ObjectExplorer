@@ -16,10 +16,10 @@ void initHook(FILTER* fp)
 {
 	MY_TRACE(_T("initHook()\n"));
 
-	g_auin.init();
+	g_auin.initExEditAddress();
 
 	// 拡張編集の関数や変数を取得する。
-	DWORD exedit = (DWORD)::GetModuleHandle(_T("exedit.auf"));
+	DWORD exedit = g_auin.GetExedit();
 //	true_ExeditWindowProc = (Type_ExeditWindowProc)(exedit + 0x3B620);
 //	true_SettingDialogProc = (Type_SettingDialogProc)(exedit + 0x2CDE0);
 	true_ExeditWindowProc = g_auin.HookExeditWindowProc(fp, hook_ExeditWindowProc);

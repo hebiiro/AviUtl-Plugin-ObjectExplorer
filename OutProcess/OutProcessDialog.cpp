@@ -298,13 +298,37 @@ int COutProcessDialog::OnCreate(LPCREATESTRUCT cs)
 	if (CDialogEx::OnCreate(cs) == -1)
 		return -1;
 
+	{
+		// DarkenWindow が存在する場合は読み込む。
+
+		TCHAR fileName[MAX_PATH] = {};
+		::GetModuleFileName(AfxGetInstanceHandle(), fileName, MAX_PATH);
+		::PathRemoveFileSpec(fileName);
+		::PathAppend(fileName, _T("..\\DarkenWindow.aul"));
+		MY_TRACE_TSTR(fileName);
+
+		HMODULE DarkenWindow = ::LoadLibrary(fileName);
+		MY_TRACE_HEX(DarkenWindow);
+
+		if (DarkenWindow)
+		{
+			typedef void (WINAPI* Type_DarkenWindow_init)(HWND hwnd);
+			Type_DarkenWindow_init DarkenWindow_init =
+				(Type_DarkenWindow_init)::GetProcAddress(DarkenWindow, "DarkenWindow_init");
+			MY_TRACE_HEX(DarkenWindow_init);
+
+			if (DarkenWindow_init)
+				DarkenWindow_init(GetSafeHwnd());
+		}
+	}
+
 	WCHAR filePath[MAX_PATH] = {};
 	::GetModuleFileNameW(AfxGetInstanceHandle(), filePath, MAX_PATH);
 	::PathRemoveExtensionW(filePath);
 	::StringCbCatW(filePath, sizeof(filePath), L"SystemSettings.xml");
 	MY_TRACE_WSTR(filePath);
 
-	m_fileUpdateChecker = CFileUpdateCheckerPtr(new CFileUpdateChecker(filePath));
+	m_fileUpdateChecker.reset(new FileUpdateChecker(filePath));
 
 	SetTimer(TIMER_ID_CHECK_SETTING_FILE, 1000, 0);
 #ifdef OBJECT_EXPLORER_CHECK_MAIN_PROCESS

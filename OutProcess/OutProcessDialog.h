@@ -117,7 +117,7 @@ public:
 
 public:
 
-	CFileUpdateCheckerPtr m_fileUpdateChecker;
+	FileUpdateCheckerPtr m_fileUpdateChecker;
 	IExplorerBrowserPtr m_explorer;
 	CComPtr<IExplorerBrowser> m_explorer2;
 	DWORD m_cookie;
