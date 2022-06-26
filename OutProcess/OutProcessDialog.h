@@ -80,7 +80,7 @@ public:
 		TCHAR path[MAX_PATH] = {};
 		::SHGetPathFromIDList(pidlFolder, path);
 		m_currentFolderPath = path;
-		m_url.SetWindowTextA(path);
+		m_url.SetWindowText(path);
 		m_url.SetEditSel(0, -1);
 
 		IShellBrowserPtr browser = m_explorer;
@@ -160,6 +160,8 @@ protected:
 	afx_msg void OnAddFavorite();
 	afx_msg void OnDeleteFavorite();
 	afx_msg void OnSelChangeUrl();
+	afx_msg LRESULT OnObjectExplorerResize(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnObjectExplorerExit(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

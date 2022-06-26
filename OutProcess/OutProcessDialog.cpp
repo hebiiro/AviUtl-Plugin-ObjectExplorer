@@ -23,6 +23,8 @@ BEGIN_MESSAGE_MAP(COutProcessDialog, CDialogEx)
 	ON_COMMAND(ID_ADD_FAVORITE, &COutProcessDialog::OnAddFavorite)
 	ON_COMMAND(ID_DELETE_FAVORITE, &COutProcessDialog::OnDeleteFavorite)
 	ON_CBN_SELCHANGE(IDC_URL, &COutProcessDialog::OnSelChangeUrl)
+	ON_REGISTERED_MESSAGE(WM_AVIUTL_OBJECT_EXPLORER_RESIZE, OnObjectExplorerResize)
+	ON_REGISTERED_MESSAGE(WM_AVIUTL_OBJECT_EXPLORER_EXIT, OnObjectExplorerExit)
 END_MESSAGE_MAP()
 
 //--------------------------------------------------------------------
@@ -110,28 +112,6 @@ void COutProcessDialog::loadSettings()
 		}
 
 		{
-			MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"window");
-			int c = nodeList->length;
-			for (int i = 0; i < c; i++)
-			{
-				MSXML2::IXMLDOMElementPtr element = nodeList->item[i];
-
-				int x = 0, y = 0, w = 0, h = 0;
-				getPrivateProfileInt(element, L"x", x);
-				getPrivateProfileInt(element, L"y", y);
-				getPrivateProfileInt(element, L"w", w);
-				getPrivateProfileInt(element, L"h", h);
-
-				if (w > 0 && h > 0)
-					MoveWindow(x, y, w, h);
-
-				BOOL show = FALSE;
-				getPrivateProfileInt(element, L"show", show);
-				ShowWindow(show ? SW_SHOW : SW_HIDE);
-			}
-		}
-
-		{
 			MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"favorite");
 			int c = nodeList->length;
 			for (int i = 0; i < c; i++)
@@ -180,22 +160,6 @@ void COutProcessDialog::saveSettings()
 		MSXML2::IXMLDOMElementPtr parentElement = appendElement(document, document, L"ObjectExplorerSettings");
 
 		setPrivateProfileString(parentElement, L"path", (LPCTSTR)m_currentFolderPath);
-
-		{
-			MSXML2::IXMLDOMElementPtr element = appendElement(document, parentElement, L"window");
-
-			setPrivateProfileInt(element, L"show", IsWindowVisible());
-
-			CRect rc; GetWindowRect(&rc);
-			int x = rc.left;
-			int y = rc.top;
-			int w = rc.Width();
-			int h = rc.Height();
-			setPrivateProfileInt(element, L"x", x);
-			setPrivateProfileInt(element, L"y", y);
-			setPrivateProfileInt(element, L"w", w);
-			setPrivateProfileInt(element, L"h", h);
-		}
 
 		int c = m_url.GetCount();
 		for (int i = 0; i < c; i++)
@@ -283,10 +247,15 @@ BOOL COutProcessDialog::OnInitDialog()
 		::ILFree(pidlDesktop);
 	}
 
+	// エクスプローラの初期化が完了したことを通知する。
 	IShellBrowserPtr browser = m_explorer;
 	HWND hwnd = 0;
 	browser->GetWindow(&hwnd);
-	::PostMessage(theApp.getFilterWindow(), WM_AVIUTL_OBJECT_EXPLORER_INITED, (WPARAM)hwnd, 0);
+	::PostMessage(theApp.getFilterWindow(), WM_AVIUTL_OBJECT_EXPLORER_INITED, (WPARAM)GetSafeHwnd(), (LPARAM)hwnd);
+
+	// リサイズしてから表示する。
+	OnObjectExplorerResize(0, 0);
+	ShowWindow(SW_SHOW);
 
 	return TRUE;
 }
@@ -341,8 +310,13 @@ void COutProcessDialog::OnDestroy()
 {
 	MY_TRACE(_T("COutProcessDialog::OnDestroy()\n"));
 
+	// 監視タイマーを終了させる。
 	KillTimer(TIMER_ID_CHECK_MAIN_PROCESS);
 
+	// 設定をファイルに保存する。
+	saveSettings();
+
+	// エクスプローラを閉じる。
 	m_explorer->Unadvise(m_cookie);
 	m_explorer->Destroy();
 	m_explorer = 0;
@@ -388,6 +362,7 @@ void COutProcessDialog::OnSize(UINT nType, int cx, int cy)
 		CRect rc; placeHolder->GetWindowRect(&rc);
 		ScreenToClient(&rc);
 		m_explorer->SetRect(0, rc);
+
 	}
 }
 
@@ -414,7 +389,7 @@ void COutProcessDialog::OnContextMenu(CWnd* pWnd, CPoint point)
 {
 	MY_TRACE(_T("COutProcessDialog::OnContextMenu()\n"));
 
-	CMenu menu; menu.LoadMenuA(IDR_POPUP_MENU);
+	CMenu menu; menu.LoadMenu(IDR_POPUP_MENU);
 	CMenu* subMenu = menu.GetSubMenu(0);
 	subMenu->TrackPopupMenu(0, point.x, point.y, this);
 }
@@ -499,6 +474,31 @@ void COutProcessDialog::OnSelChangeUrl()
 
 		browseToPath(path);
 	}
+}
+
+//--------------------------------------------------------------------
+
+LRESULT COutProcessDialog::OnObjectExplorerResize(WPARAM wParam, LPARAM lParam)
+{
+	MY_TRACE(_T("COutProcessDialog::OnObjectExplorerResize(0x%08X, 0x%08X)\n"), wParam, lParam);
+
+	CWnd* parent = GetParent();
+	if (parent)
+	{
+		CRect rc; parent->GetClientRect(&rc);
+		SetWindowPos(0, rc.left, rc.top, rc.Width(), rc.Height(), SWP_NOZORDER);
+	}
+
+	return 0;
+}
+
+LRESULT COutProcessDialog::OnObjectExplorerExit(WPARAM wParam, LPARAM lParam)
+{
+	MY_TRACE(_T("COutProcessDialog::OnObjectExplorerExit(0x%08X, 0x%08X)\n"), wParam, lParam);
+
+	DestroyWindow();
+
+	return 0;
 }
 
 //--------------------------------------------------------------------

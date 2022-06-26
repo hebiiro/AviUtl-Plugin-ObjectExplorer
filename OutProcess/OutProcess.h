@@ -38,7 +38,6 @@ public:
 public:
 
 	virtual BOOL InitInstance();
-	afx_msg void OnObjectExplorerShow(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

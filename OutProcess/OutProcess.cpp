@@ -14,7 +14,6 @@ COutProcessApp theApp;
 //--------------------------------------------------------------------
 
 BEGIN_MESSAGE_MAP(COutProcessApp, CWinApp)
-	ON_REGISTERED_THREAD_MESSAGE(WM_AVIUTL_OBJECT_EXPLORER_SHOW, OnObjectExplorerShow)
 END_MESSAGE_MAP()
 
 //--------------------------------------------------------------------
@@ -67,7 +66,7 @@ BOOL COutProcessApp::InitInstance()
 	}
 
 	// メインダイアログを作成する。
-	CWnd* parent = CWnd::FromHandle(getAviUtlWindow());
+	CWnd* parent = CWnd::FromHandle(getFilterWindow());
 	m_pMainWnd = &m_dialog;
 	if (!m_dialog.Create(IDD_OUT_PROCESS, parent))
 	{
@@ -81,34 +80,11 @@ BOOL COutProcessApp::InitInstance()
 
 		// メッセージループを開始する。
 		m_dialog.RunModalLoop(MLF_NOKICKIDLE);
-
-		// 設定をファイルに保存する。
-		m_dialog.saveSettings();
-
-		// メインダイアログを削除する。
-		m_dialog.DestroyWindow();
 	}
 #if !defined(_AFXDLL) && !defined(_AFX_NO_MFC_CONTROLS_IN_DIALOGS)
 	ControlBarCleanUp();
 #endif
 	return FALSE;
-}
-
-void COutProcessApp::OnObjectExplorerShow(WPARAM wParam, LPARAM lParam)
-{
-	MY_TRACE(_T("COutProcessApp::OnObjectExplorerShow(0x%08X, 0x%08X)\n"), wParam, lParam);
-
-	if (wParam == -1)
-	{
-		if (m_dialog.IsWindowVisible())
-			m_dialog.ShowWindow(SW_HIDE);
-		else
-			m_dialog.ShowWindow(SW_SHOW);
-	}
-	else
-	{
-		m_dialog.ShowWindow(wParam);
-	}
 }
 
 //--------------------------------------------------------------------

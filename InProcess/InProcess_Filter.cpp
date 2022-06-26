@@ -11,7 +11,7 @@ EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable(void)
 	::StringCbCopy(name, sizeof(name), _T("オブジェクトエクスプローラ"));
 
 	static TCHAR information[MAX_PATH] = {};
-	::StringCbCopy(information, sizeof(information), _T("オブジェクトエクスプローラ 2.2.0 by 蛇色"));
+	::StringCbCopy(information, sizeof(information), _T("オブジェクトエクスプローラ 3.0.0 by 蛇色"));
 
 	static FILTER_DLL filter =
 	{
@@ -26,7 +26,7 @@ EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable(void)
 		NULL, NULL, NULL,
 		NULL, NULL,
 		NULL, NULL, NULL,
-		func_proc,
+		NULL,//func_proc,
 		func_init,
 		func_exit,
 		NULL,
@@ -87,52 +87,27 @@ BOOL func_WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *e
 
 	switch (message)
 	{
-	case WM_FILTER_UPDATE:
+	case WM_FILTER_INIT:
 		{
-			MY_TRACE(_T("func_WndProc(WM_FILTER_UPDATE)\n"));
+			MY_TRACE(_T("func_WndProc(WM_FILTER_INIT)\n"));
 
-			if (fp->exfunc->is_editing(editp) != TRUE) break; // 編集中でなければ終了
+			modifyStyle(hwnd, 0, WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
 
 			break;
 		}
-	case WM_FILTER_CHANGE_EDIT:
+	case WM_FILTER_EXIT:
 		{
-			MY_TRACE(_T("func_WndProc(WM_FILTER_CHANGE_EDIT)\n"));
+			MY_TRACE(_T("func_WndProc(WM_FILTER_EXIT)\n"));
 
-			if (fp->exfunc->is_editing(editp) != TRUE) break; // 編集中でなければ終了
+			theApp.sendMessage(WM_AVIUTL_OBJECT_EXPLORER_EXIT, 0, 0);
 
 			break;
 		}
-	case WM_FILTER_CHANGE_WINDOW:
+	case WM_SIZE:
 		{
-			MY_TRACE(_T("func_WndProc(WM_FILTER_CHANGE_WINDOW)\n"));
+			MY_TRACE(_T("func_WndProc(WM_SIZE)\n"));
 
-			if (fp->exfunc->is_filter_window_disp(fp))
-			{
-				theApp.postMessage(WM_AVIUTL_OBJECT_EXPLORER_SHOW, SW_SHOW, 0);
-				::ShowWindow(fp->hwnd, SW_HIDE);
-			}
-			else
-			{
-				theApp.postMessage(WM_AVIUTL_OBJECT_EXPLORER_SHOW, SW_HIDE, 0);
-				::ShowWindow(fp->hwnd, SW_HIDE);
-			}
-
-			break;
-		}
-	case WM_FILTER_COMMAND:
-		{
-			switch (wParam)
-			{
-			case ID_SHOW:
-				{
-					MY_TRACE(_T("func_WndProc(WM_COMMAND, ID_SHOW)\n"));
-
-					theApp.postMessage(WM_AVIUTL_OBJECT_EXPLORER_SHOW, -1, 0);
-
-					break;
-				}
-			}
+			theApp.postMessage(WM_AVIUTL_OBJECT_EXPLORER_RESIZE, 0, 0);
 
 			break;
 		}
@@ -142,7 +117,11 @@ BOOL func_WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *e
 	{
 		MY_TRACE(_T("func_WndProc(WM_AVIUTL_OBJECT_EXPLORER_INITED)\n"));
 
-		theApp.m_browser = (HWND)wParam;
+		theApp.m_dialog = (HWND)wParam;
+		theApp.m_browser = (HWND)lParam;
+
+		MY_TRACE_HWND(theApp.m_dialog);
+		MY_TRACE_HWND(theApp.m_browser);
 	}
 	else if (message == WM_AVIUTL_OBJECT_EXPLORER_GET)
 	{

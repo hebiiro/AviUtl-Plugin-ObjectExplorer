@@ -19,10 +19,10 @@ void initHook(FILTER* fp)
 	g_auin.initExEditAddress();
 
 	// 拡張編集の関数や変数を取得する。
-	DWORD exedit = g_auin.GetExedit();
-//	true_ExeditWindowProc = (Type_ExeditWindowProc)(exedit + 0x3B620);
+	DWORD exedit = g_auin.GetExEdit();
+//	true_ExEditWindowProc = (Type_ExEditWindowProc)(exedit + 0x3B620);
 //	true_SettingDialogProc = (Type_SettingDialogProc)(exedit + 0x2CDE0);
-	true_ExeditWindowProc = g_auin.HookExeditWindowProc(fp, hook_ExeditWindowProc);
+	true_ExEditWindowProc = g_auin.HookExEditWindowProc(fp, hook_ExEditWindowProc);
 	true_SettingDialogProc = g_auin.HookSettingDialogProc(hook_SettingDialogProc);
 	true_AddAlias = g_auin.GetAddAlias();
 
@@ -30,7 +30,7 @@ void initHook(FILTER* fp)
 	DetourTransactionBegin();
 	DetourUpdateThread(::GetCurrentThread());
 
-//	ATTACH_HOOK_PROC(ExeditWindowProc);
+//	ATTACH_HOOK_PROC(ExEditWindowProc);
 //	ATTACH_HOOK_PROC(SettingDialogProc);
 	ATTACH_HOOK_PROC(AddAlias);
 
@@ -183,7 +183,7 @@ void loadAlias()
 	g_loadAlias = TRUE;
 	// この中で AddAlias() が呼ばれるのでフックする。
 	// 1036 はエイリアスを追加するコマンド。1 はエイリアスのインデックス。
-	::SendMessage(g_auin.GetExeditWindow(), WM_COMMAND, 1036, 1);
+	::SendMessage(g_auin.GetExEditWindow(), WM_COMMAND, 1036, 1);
 	g_loadAlias = FALSE;
 }
 
@@ -347,7 +347,7 @@ BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 
 //--------------------------------------------------------------------
 
-IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExeditWindowProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *editp, FILTER *fp))
+IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExEditWindowProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *editp, FILTER *fp))
 {
 	switch (message)
 	{
@@ -374,7 +374,7 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExeditWindowProc, (HWND hwnd, UINT mess
 		}
 	}
 
-	return true_ExeditWindowProc(hwnd, message, wParam, lParam, editp, fp);
+	return true_ExEditWindowProc(hwnd, message, wParam, lParam, editp, fp);
 }
 
 IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, SettingDialogProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam))

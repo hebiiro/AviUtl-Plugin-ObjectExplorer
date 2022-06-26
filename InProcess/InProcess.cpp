@@ -18,6 +18,7 @@ CInProcessApp::CInProcessApp()
 {
 	m_instance = 0;
 	::ZeroMemory(&m_pi, sizeof(m_pi));
+	m_dialog = 0;
 	m_browser = 0;
 }
 
@@ -39,8 +40,6 @@ BOOL CInProcessApp::init(FILTER *fp)
 
 	if (!createSubProcess(fp))
 		return FALSE;
-
-	fp->exfunc->add_menu_item(fp, const_cast<LPSTR>("オブジェクトエクスプローラを表示"), fp->hwnd, ID_SHOW, 0, 0);
 
 	return TRUE;
 }

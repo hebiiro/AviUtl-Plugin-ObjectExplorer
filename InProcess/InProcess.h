@@ -2,14 +2,13 @@
 
 #include "resource.h"
 
-const UINT ID_SHOW = 1000;
-
 class CInProcessApp
 {
 public:
 
 	HINSTANCE m_instance;
 	PROCESS_INFORMATION m_pi;
+	HWND m_dialog;
 	HWND m_browser;
 
 public:
@@ -24,7 +23,12 @@ public:
 
 	void postMessage(UINT message, WPARAM wParam, LPARAM lParam)
 	{
-		::PostThreadMessage(m_pi.dwThreadId, message, wParam, lParam);
+		::PostMessage(m_dialog, message, wParam, lParam);
+	}
+
+	void sendMessage(UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		::SendMessage(m_dialog, message, wParam, lParam);
 	}
 };
 
