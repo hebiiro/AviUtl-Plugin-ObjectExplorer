@@ -32,7 +32,6 @@ _COM_SMARTPTR_TYPEDEF(IExplorerBrowser, __uuidof(IExplorerBrowser));
 _COM_SMARTPTR_TYPEDEF(IExplorerPaneVisibility, __uuidof(IExplorerPaneVisibility));
 _COM_SMARTPTR_TYPEDEF(IShellItem, __uuidof(IShellItem));
 
-//#import <msxml6.dll>
 #import <msxml3.dll>
 
 #include <tchar.h>

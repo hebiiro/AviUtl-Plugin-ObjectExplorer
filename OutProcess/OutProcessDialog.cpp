@@ -226,11 +226,12 @@ BOOL COutProcessDialog::OnInitDialog()
 		CRect rc; placeHolder->GetWindowRect(&rc);
 		ScreenToClient(&rc);
 
-		FOLDERSETTINGS fs;
-		fs.ViewMode = FVM_DETAILS;
-		fs.fFlags = 0;
+		FOLDERSETTINGS fs = {};
+		fs.ViewMode = FVM_AUTO;
+		fs.fFlags = 0;//FWF_NOBROWSERVIEWSTATE;
 
 		hr = m_explorer->Initialize(GetSafeHwnd(), &rc, &fs);
+		hr = m_explorer->SetPropertyBag(L"AviUtl.ObjectExplorer");
 	}
 
 	// ハンドラを追加する。
@@ -238,7 +239,7 @@ BOOL COutProcessDialog::OnInitDialog()
 	hr = m_explorer->Advise(static_cast<IExplorerBrowserEvents*>(this), &m_cookie);
 
 	// フレームを表示する。
-	hr = m_explorer->SetOptions(EBO_SHOWFRAMES | EBO_NOPERSISTVIEWSTATE);
+	hr = m_explorer->SetOptions(EBO_SHOWFRAMES);
 
 	{
 		PIDLIST_ABSOLUTE pidlDesktop;
