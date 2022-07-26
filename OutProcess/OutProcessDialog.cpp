@@ -22,6 +22,10 @@ BEGIN_MESSAGE_MAP(COutProcessDialog, CDialogEx)
 	ON_BN_CLICKED(IDC_GET, &COutProcessDialog::OnClickedGet)
 	ON_COMMAND(ID_ADD_FAVORITE, &COutProcessDialog::OnAddFavorite)
 	ON_COMMAND(ID_DELETE_FAVORITE, &COutProcessDialog::OnDeleteFavorite)
+	ON_COMMAND(ID_SHOW_NAV_PANE, &COutProcessDialog::OnShowNavPane)
+	ON_COMMAND(ID_PLAY_VOICE, &COutProcessDialog::OnPlayVoice)
+	ON_UPDATE_COMMAND_UI(ID_SHOW_NAV_PANE, &COutProcessDialog::OnUpdateShowNavPane)
+	ON_UPDATE_COMMAND_UI(ID_PLAY_VOICE, &COutProcessDialog::OnUpdatePlayVoice)
 	ON_CBN_SELCHANGE(IDC_URL, &COutProcessDialog::OnSelChangeUrl)
 	ON_REGISTERED_MESSAGE(WM_AVIUTL_OBJECT_EXPLORER_RESIZE, OnObjectExplorerResize)
 	ON_REGISTERED_MESSAGE(WM_AVIUTL_OBJECT_EXPLORER_EXIT, OnObjectExplorerExit)
@@ -36,6 +40,8 @@ COutProcessDialog::COutProcessDialog(CWnd* parent)
 
 	m_cookie = 0;
 	m_isSettingsLoaded = FALSE;
+	m_isNavPaneVisible = TRUE;
+	m_isVoiceEnabled = TRUE;
 }
 
 COutProcessDialog::~COutProcessDialog()
@@ -103,13 +109,14 @@ void COutProcessDialog::loadSettings()
 
 		MSXML2::IXMLDOMElementPtr element = document->documentElement;
 
+		getPrivateProfileBool(element, L"isNavPaneVisible", m_isNavPaneVisible);
+		getPrivateProfileBool(element, L"isVoiceEnabled", m_isVoiceEnabled);
+
 		_bstr_t path;
 		getPrivateProfileString(element, L"path", path);
 		MY_TRACE_WSTR((BSTR)path);
 		if ((BSTR)path)
-		{
-			browseToPath(path);
-		}
+			m_url.SetWindowText(path);
 
 		{
 			MSXML2::IXMLDOMNodeListPtr nodeList = element->selectNodes(L"favorite");
@@ -160,6 +167,8 @@ void COutProcessDialog::saveSettings()
 		MSXML2::IXMLDOMElementPtr parentElement = appendElement(document, document, L"ObjectExplorerSettings");
 
 		setPrivateProfileString(parentElement, L"path", (LPCTSTR)m_currentFolderPath);
+		setPrivateProfileBool(parentElement, L"isNavPaneVisible", m_isNavPaneVisible);
+		setPrivateProfileBool(parentElement, L"isVoiceEnabled", m_isVoiceEnabled);
 
 		int c = m_url.GetCount();
 		for (int i = 0; i < c; i++)
@@ -178,6 +187,68 @@ void COutProcessDialog::saveSettings()
 	}
 }
 
+void COutProcessDialog::createExplorer()
+{
+	MY_TRACE(_T("COutProcessDialog::createExplorer()\n"));
+
+	// エクスプローラを作成する。
+	HRESULT hr = m_explorer.CreateInstance(CLSID_ExplorerBrowser);
+
+	{
+		// エクスプローラを初期化する。
+
+		CWnd* placeHolder = GetDlgItem(IDC_PLACE_HOLDER);
+		CRect rc; placeHolder->GetWindowRect(&rc);
+		ScreenToClient(&rc);
+
+		FOLDERSETTINGS fs = {};
+		fs.ViewMode = FVM_AUTO;
+		fs.fFlags = 0;//FWF_NOBROWSERVIEWSTATE;
+
+		hr = m_explorer->Initialize(GetSafeHwnd(), &rc, &fs);
+		hr = m_explorer->SetPropertyBag(L"AviUtl.ObjectExplorer");
+	}
+
+	// ハンドラを追加する。
+	hr = ::IUnknown_SetSite(m_explorer, static_cast<IServiceProvider*>(this));
+	hr = m_explorer->Advise(static_cast<IExplorerBrowserEvents*>(this), &m_cookie);
+
+	if (m_isNavPaneVisible)
+	{
+		// フレームを表示する。
+		hr = m_explorer->SetOptions(EBO_SHOWFRAMES);
+	}
+
+	CString url; m_url.GetWindowText(url);
+
+	if (url.IsEmpty())
+	{
+		PIDLIST_ABSOLUTE pidlDesktop;
+		::SHGetKnownFolderIDList(FOLDERID_Desktop, 0, NULL, &pidlDesktop);
+		m_explorer->BrowseToIDList(pidlDesktop, SBSP_ABSOLUTE);
+		::ILFree(pidlDesktop);
+	}
+	else
+	{
+		browseToPath(url);
+	}
+
+	// エクスプローラの初期化が完了したことを通知する。
+	IShellBrowserPtr browser = m_explorer;
+	HWND hwnd = 0;
+	browser->GetWindow(&hwnd);
+	::PostMessage(theApp.getFilterWindow(), WM_AVIUTL_OBJECT_EXPLORER_INITED, (WPARAM)GetSafeHwnd(), (LPARAM)hwnd);
+}
+
+void COutProcessDialog::destroyExplorer()
+{
+	MY_TRACE(_T("COutProcessDialog::destroyExplorer()\n"));
+
+	m_explorer->Unadvise(m_cookie);
+	m_explorer->Destroy();
+	m_explorer = 0;
+}
+
 void COutProcessDialog::browseToPath(LPCTSTR path)
 {
 	MY_TRACE(_T("COutProcessDialog::browseToPath(%s)\n"), path);
@@ -187,6 +258,28 @@ void COutProcessDialog::browseToPath(LPCTSTR path)
 	{
 		m_explorer->BrowseToIDList(pidl, SBSP_ABSOLUTE);
 		::ILFree(pidl);
+	}
+}
+
+void COutProcessDialog::playVoice(LPCTSTR voice)
+{
+	MY_TRACE(_T("COutProcessDialog::playVoice(%s)\n"), voice);
+
+	if (!m_isVoiceEnabled)
+		return;
+
+	// wav ファイルのパスを取得する。
+	TCHAR wavFileName[MAX_PATH] = {};
+	::GetModuleFileName(AfxGetInstanceHandle(), wavFileName, MAX_PATH);
+	::PathRemoveFileSpec(wavFileName);
+	::PathAppend(wavFileName, voice);
+	MY_TRACE_TSTR(wavFileName);
+
+	// ファイルが存在するなら
+	if (::GetFileAttributes(wavFileName) != INVALID_FILE_ATTRIBUTES)
+	{
+		// wav ファイルを再生する。
+		::PlaySound(wavFileName, 0, SND_FILENAME | SND_ASYNC);
 	}
 }
 
@@ -216,43 +309,12 @@ BOOL COutProcessDialog::OnInitDialog()
 
 	CDialogEx::OnInitDialog();
 
+	// 設定をファイルから読み込む。
+	loadSystemSettings();
+	loadSettings();
+
 	// エクスプローラを作成する。
-	HRESULT hr = m_explorer.CreateInstance(CLSID_ExplorerBrowser);
-
-	{
-		// エクスプローラを初期化する。
-
-		CWnd* placeHolder = GetDlgItem(IDC_PLACE_HOLDER);
-		CRect rc; placeHolder->GetWindowRect(&rc);
-		ScreenToClient(&rc);
-
-		FOLDERSETTINGS fs = {};
-		fs.ViewMode = FVM_AUTO;
-		fs.fFlags = 0;//FWF_NOBROWSERVIEWSTATE;
-
-		hr = m_explorer->Initialize(GetSafeHwnd(), &rc, &fs);
-		hr = m_explorer->SetPropertyBag(L"AviUtl.ObjectExplorer");
-	}
-
-	// ハンドラを追加する。
-	hr = ::IUnknown_SetSite(m_explorer, static_cast<IServiceProvider*>(this));
-	hr = m_explorer->Advise(static_cast<IExplorerBrowserEvents*>(this), &m_cookie);
-
-	// フレームを表示する。
-	hr = m_explorer->SetOptions(EBO_SHOWFRAMES);
-
-	{
-		PIDLIST_ABSOLUTE pidlDesktop;
-		::SHGetKnownFolderIDList(FOLDERID_Desktop, 0, NULL, &pidlDesktop);
-		m_explorer->BrowseToIDList(pidlDesktop, SBSP_ABSOLUTE);
-		::ILFree(pidlDesktop);
-	}
-
-	// エクスプローラの初期化が完了したことを通知する。
-	IShellBrowserPtr browser = m_explorer;
-	HWND hwnd = 0;
-	browser->GetWindow(&hwnd);
-	::PostMessage(theApp.getFilterWindow(), WM_AVIUTL_OBJECT_EXPLORER_INITED, (WPARAM)GetSafeHwnd(), (LPARAM)hwnd);
+	createExplorer();
 
 	// リサイズしてから表示する。
 	OnObjectExplorerResize(0, 0);
@@ -318,9 +380,7 @@ void COutProcessDialog::OnDestroy()
 	saveSettings();
 
 	// エクスプローラを閉じる。
-	m_explorer->Unadvise(m_cookie);
-	m_explorer->Destroy();
-	m_explorer = 0;
+	destroyExplorer();
 
 	CDialogEx::OnDestroy();
 }
@@ -363,7 +423,6 @@ void COutProcessDialog::OnSize(UINT nType, int cx, int cy)
 		CRect rc; placeHolder->GetWindowRect(&rc);
 		ScreenToClient(&rc);
 		m_explorer->SetRect(0, rc);
-
 	}
 }
 
@@ -392,6 +451,8 @@ void COutProcessDialog::OnContextMenu(CWnd* pWnd, CPoint point)
 
 	CMenu menu; menu.LoadMenu(IDR_POPUP_MENU);
 	CMenu* subMenu = menu.GetSubMenu(0);
+	subMenu->CheckMenuItem(ID_SHOW_NAV_PANE, m_isNavPaneVisible ? MF_CHECKED : MF_UNCHECKED);
+	subMenu->CheckMenuItem(ID_PLAY_VOICE, m_isVoiceEnabled ? MF_CHECKED : MF_UNCHECKED);
 	subMenu->TrackPopupMenu(0, point.x, point.y, this);
 }
 
@@ -413,7 +474,7 @@ void COutProcessDialog::OnCancel()
 {
 	MY_TRACE(_T("COutProcessDialog::OnCancel()\n"));
 
-	ShowWindow(SW_HIDE);
+//	ShowWindow(SW_HIDE);
 
 //	__super::OnCancel();
 }
@@ -423,6 +484,8 @@ void COutProcessDialog::OnClickedPrev()
 	MY_TRACE(_T("COutProcessDialog::OnClickedPrev()\n"));
 
 	m_explorer->BrowseToIDList(NULL, SBSP_NAVIGATEBACK);
+
+	playVoice(_T("Prev.wav"));
 }
 
 void COutProcessDialog::OnClickedNext()
@@ -430,6 +493,8 @@ void COutProcessDialog::OnClickedNext()
 	MY_TRACE(_T("COutProcessDialog::OnClickedNext()\n"));
 
 	m_explorer->BrowseToIDList(NULL, SBSP_NAVIGATEFORWARD);
+
+	playVoice(_T("Next.wav"));
 }
 
 void COutProcessDialog::OnClickedUp()
@@ -437,11 +502,17 @@ void COutProcessDialog::OnClickedUp()
 	MY_TRACE(_T("COutProcessDialog::OnClickedUp()\n"));
 
 	m_explorer->BrowseToIDList(NULL, SBSP_PARENT);
+
+	playVoice(_T("Up.wav"));
 }
 
 void COutProcessDialog::OnClickedGet()
 {
+	MY_TRACE(_T("COutProcessDialog::OnClickedGet()\n"));
+
 	::PostMessage(theApp.getFilterWindow(), WM_AVIUTL_OBJECT_EXPLORER_GET, (WPARAM)GetSafeHwnd(), (LPARAM)m_url.GetSafeHwnd());
+
+	playVoice(_T("Get.wav"));
 }
 
 void COutProcessDialog::OnAddFavorite()
@@ -450,7 +521,11 @@ void COutProcessDialog::OnAddFavorite()
 
 	int index = m_url.FindString(0, m_currentFolderPath);
 	if (index == CB_ERR)
+	{
 		m_url.AddString(m_currentFolderPath);
+
+		playVoice(_T("AddFavorite.wav"));
+	}
 }
 
 void COutProcessDialog::OnDeleteFavorite()
@@ -459,7 +534,53 @@ void COutProcessDialog::OnDeleteFavorite()
 
 	int index = m_url.FindString(0, m_currentFolderPath);
 	if (index != CB_ERR)
+	{
 		m_url.DeleteString(index);
+
+		playVoice(_T("DeleteFavorite.wav"));
+	}
+}
+
+void COutProcessDialog::OnShowNavPane()
+{
+	MY_TRACE(_T("COutProcessDialog::OnShowNavPane()\n"));
+
+	if (m_isNavPaneVisible)
+	{
+		m_isNavPaneVisible = FALSE;
+		destroyExplorer();
+		createExplorer();
+	}
+	else
+	{
+		m_isNavPaneVisible = TRUE;
+		destroyExplorer();
+		createExplorer();
+	}
+}
+
+void COutProcessDialog::OnPlayVoice()
+{
+	MY_TRACE(_T("COutProcessDialog::OnPlayVoice()\n"));
+
+	if (m_isVoiceEnabled)
+	{
+		m_isVoiceEnabled = FALSE;
+	}
+	else
+	{
+		m_isVoiceEnabled = TRUE;
+	}
+}
+
+void COutProcessDialog::OnUpdateShowNavPane(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_isNavPaneVisible);
+}
+
+void COutProcessDialog::OnUpdatePlayVoice(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_isVoiceEnabled);
 }
 
 void COutProcessDialog::OnSelChangeUrl()

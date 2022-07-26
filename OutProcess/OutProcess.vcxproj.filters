@@ -4,20 +4,17 @@
     <Filter Include="Common">
       <UniqueIdentifier>{5b27a32b-1960-4531-8382-e8a6ec557c30}</UniqueIdentifier>
     </Filter>
-    <Filter Include="リソース">
+    <Filter Include="Framework">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
-      <Filter>リソース</Filter>
+      <Filter>Framework</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="OutProcess.h" />
     <ClInclude Include="OutProcessDialog.h" />
-    <ClInclude Include="pch.h" />
     <ClInclude Include="..\Common\ObjectExplorer.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -42,23 +39,34 @@
     <ClInclude Include="..\..\Common\FileUpdateChecker.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
     <ClCompile Include="OutProcess.cpp" />
     <ClCompile Include="OutProcessDialog.cpp" />
+    <ClCompile Include="pch.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OutProcess.rc">
-      <Filter>リソース</Filter>
+      <Filter>Framework</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\OutProcess.ico">
-      <Filter>リソース</Filter>
+      <Filter>Framework</Filter>
     </Image>
     <Image Include="OutProcess.ico">
-      <Filter>リソース</Filter>
+      <Filter>Framework</Filter>
     </Image>
   </ItemGroup>
 </Project>

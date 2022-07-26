@@ -74,10 +74,6 @@ BOOL COutProcessApp::InitInstance()
 	}
 	else
 	{
-		// 設定をファイルから読み込む。
-		m_dialog.loadSystemSettings();
-		m_dialog.loadSettings();
-
 		// メッセージループを開始する。
 		m_dialog.RunModalLoop(MLF_NOKICKIDLE);
 	}

@@ -123,6 +123,8 @@ public:
 	CString m_currentFolderPath;
 	CComboBox m_url;
 	BOOL m_isSettingsLoaded;
+	BOOL m_isNavPaneVisible;
+	BOOL m_isVoiceEnabled;
 
 public:
 
@@ -134,7 +136,10 @@ public:
 	void loadSettings();
 	void saveSettings();
 
+	void createExplorer();
+	void destroyExplorer();
 	void browseToPath(LPCTSTR path);
+	void playVoice(LPCTSTR voice);
 
 protected:
 
@@ -158,6 +163,10 @@ protected:
 	afx_msg void OnClickedGet();
 	afx_msg void OnAddFavorite();
 	afx_msg void OnDeleteFavorite();
+	afx_msg void OnShowNavPane();
+	afx_msg void OnPlayVoice();
+	afx_msg void OnUpdateShowNavPane(CCmdUI* pCmdUI);
+	afx_msg void OnUpdatePlayVoice(CCmdUI* pCmdUI);
 	afx_msg void OnSelChangeUrl();
 	afx_msg LRESULT OnObjectExplorerResize(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnObjectExplorerExit(WPARAM wParam, LPARAM lParam);

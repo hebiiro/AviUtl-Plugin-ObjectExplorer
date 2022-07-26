@@ -17,9 +17,9 @@ public:
 	~CInProcessApp();
 
 	void dllInit(HINSTANCE instance);
-	BOOL init(FILTER *fp);
-	BOOL exit(FILTER *fp);
-	BOOL createSubProcess(FILTER *fp);
+	BOOL init(AviUtl::FilterPlugin* fp);
+	BOOL exit(AviUtl::FilterPlugin* fp);
+	BOOL createSubProcess(AviUtl::FilterPlugin* fp);
 
 	void postMessage(UINT message, WPARAM wParam, LPARAM lParam)
 	{

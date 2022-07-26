@@ -2,52 +2,9 @@
 #include "InProcess.h"
 #include "InProcess_Hook.h"
 
-//---------------------------------------------------------------------
-//		フィルタ構造体のポインタを渡す関数
-//---------------------------------------------------------------------
-EXTERN_C FILTER_DLL __declspec(dllexport) * __stdcall GetFilterTable(void)
-{
-	static TCHAR name[MAX_PATH] = {};
-	::StringCbCopy(name, sizeof(name), _T("オブジェクトエクスプローラ"));
+//--------------------------------------------------------------------
 
-	static TCHAR information[MAX_PATH] = {};
-	::StringCbCopy(information, sizeof(information), _T("オブジェクトエクスプローラ 3.0.0 by 蛇色"));
-
-	static FILTER_DLL filter =
-	{
-		FILTER_FLAG_ALWAYS_ACTIVE |
-//		FILTER_FLAG_MAIN_MESSAGE |
-		FILTER_FLAG_WINDOW_THICKFRAME |
-		FILTER_FLAG_WINDOW_SIZE |
-		FILTER_FLAG_DISP_FILTER |
-		FILTER_FLAG_EX_INFORMATION,
-		400, 400,
-		name,
-		NULL, NULL, NULL,
-		NULL, NULL,
-		NULL, NULL, NULL,
-		NULL,//func_proc,
-		func_init,
-		func_exit,
-		NULL,
-		func_WndProc,
-		NULL, NULL,
-		NULL,
-		NULL,
-		information,
-		NULL, NULL,
-		NULL, NULL, NULL, NULL,
-		NULL,
-	};
-
-	return &filter;
-}
-
-//---------------------------------------------------------------------
-//		初期化
-//---------------------------------------------------------------------
-
-BOOL func_init(FILTER *fp)
+BOOL func_init(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("func_init()\n"));
 
@@ -56,10 +13,7 @@ BOOL func_init(FILTER *fp)
 	return theApp.init(fp);
 }
 
-//---------------------------------------------------------------------
-//		終了
-//---------------------------------------------------------------------
-BOOL func_exit(FILTER *fp)
+BOOL func_exit(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("func_exit()\n"));
 
@@ -68,36 +22,21 @@ BOOL func_exit(FILTER *fp)
 	return theApp.exit(fp);
 }
 
-//---------------------------------------------------------------------
-//		フィルタされた画像をバッファにコピー
-//---------------------------------------------------------------------
-BOOL func_proc(FILTER *fp, FILTER_PROC_INFO *fpip)
+BOOL func_WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, AviUtl::EditHandle* editp, AviUtl::FilterPlugin* fp)
 {
-	MY_TRACE(_T("func_proc() : %d\n"), ::GetTickCount());
-
-	return TRUE;
-}
-
-//---------------------------------------------------------------------
-//		WndProc
-//---------------------------------------------------------------------
-BOOL func_WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *editp, FILTER *fp)
-{
-	//	TRUEを返すと全体が再描画される
-
 	switch (message)
 	{
-	case WM_FILTER_INIT:
+	case AviUtl::FilterPlugin::WindowMessage::Init:
 		{
-			MY_TRACE(_T("func_WndProc(WM_FILTER_INIT)\n"));
+			MY_TRACE(_T("func_WndProc(Init, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			modifyStyle(hwnd, 0, WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
 
 			break;
 		}
-	case WM_FILTER_EXIT:
+	case AviUtl::FilterPlugin::WindowMessage::Exit:
 		{
-			MY_TRACE(_T("func_WndProc(WM_FILTER_EXIT)\n"));
+			MY_TRACE(_T("func_WndProc(Exit, 0x%08X, 0x%08X)\n"), wParam, lParam);
 
 			theApp.sendMessage(WM_AVIUTL_OBJECT_EXPLORER_EXIT, 0, 0);
 
@@ -164,4 +103,31 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 	return TRUE;
 }
 
-//---------------------------------------------------------------------
+//--------------------------------------------------------------------
+
+EXTERN_C AviUtl::FilterPluginDLL* CALLBACK GetFilterTable()
+{
+	LPCSTR name = "オブジェクトエクスプローラ";
+	LPCSTR information = "オブジェクトエクスプローラ 3.1.0 by 蛇色";
+
+	static AviUtl::FilterPluginDLL filter =
+	{
+		.flag =
+			AviUtl::detail::FilterPluginFlag::AlwaysActive |
+			AviUtl::detail::FilterPluginFlag::DispFilter |
+			AviUtl::detail::FilterPluginFlag::WindowThickFrame |
+			AviUtl::detail::FilterPluginFlag::WindowSize |
+			AviUtl::detail::FilterPluginFlag::ExInformation,
+		.x = 400,
+		.y = 400,
+		.name = name,
+		.func_init = func_init,
+		.func_exit = func_exit,
+		.func_WndProc = func_WndProc,
+		.information = information,
+	};
+
+	return &filter;
+}
+
+//--------------------------------------------------------------------

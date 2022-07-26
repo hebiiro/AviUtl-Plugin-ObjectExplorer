@@ -34,7 +34,7 @@ void CInProcessApp::dllInit(HINSTANCE instance)
 	MY_TRACE_HEX(m_instance);
 }
 
-BOOL CInProcessApp::init(FILTER *fp)
+BOOL CInProcessApp::init(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("CInProcessApp::init()\n"));
 
@@ -44,7 +44,7 @@ BOOL CInProcessApp::init(FILTER *fp)
 	return TRUE;
 }
 
-BOOL CInProcessApp::exit(FILTER *fp)
+BOOL CInProcessApp::exit(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("CInProcessApp::exit()\n"));
 
@@ -54,7 +54,7 @@ BOOL CInProcessApp::exit(FILTER *fp)
 	return TRUE;
 }
 
-BOOL CInProcessApp::createSubProcess(FILTER *fp)
+BOOL CInProcessApp::createSubProcess(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("CInProcessApp::createSubProcess()\n"));
 

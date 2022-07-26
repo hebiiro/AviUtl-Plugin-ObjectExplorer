@@ -12,7 +12,7 @@ std::vector<std::string> g_aliasFileNames; // エイリアス読み込みに使�
 //--------------------------------------------------------------------
 
 // フックをセットする。
-void initHook(FILTER* fp)
+void initHook(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("initHook()\n"));
 
@@ -45,7 +45,7 @@ void initHook(FILTER* fp)
 }
 
 // フックを解除する。
-void termHook(FILTER* fp)
+void termHook(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("termHook()\n"));
 }
@@ -347,7 +347,7 @@ BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 
 //--------------------------------------------------------------------
 
-IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExEditWindowProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, void *editp, FILTER *fp))
+IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExEditWindowProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, AviUtl::EditHandle* editp, AviUtl::FilterPlugin* fp))
 {
 	switch (message)
 	{
