@@ -58,16 +58,10 @@ BOOL CInProcessApp::createSubProcess(AviUtl::FilterPlugin* fp)
 {
 	MY_TRACE(_T("CInProcessApp::createSubProcess()\n"));
 
-	TCHAR fileSpec[MAX_PATH] = {};
-	::GetModuleFileName(m_instance, fileSpec, MAX_PATH);
-	::PathStripPath(fileSpec);
-	MY_TRACE_TSTR(fileSpec);
-
 	TCHAR path[MAX_PATH] = {};
 	::GetModuleFileName(m_instance, path, MAX_PATH);
 	::PathRemoveExtension(path);
-	::PathAppend(path, fileSpec);
-	::PathRenameExtension(path, _T(".exe"));
+	::PathAppend(path, _T("ObjectExplorer.exe"));
 	MY_TRACE_TSTR(path);
 
 	TCHAR args[MAX_PATH] = {};

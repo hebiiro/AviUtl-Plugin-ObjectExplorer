@@ -107,8 +107,17 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 
 EXTERN_C AviUtl::FilterPluginDLL* CALLBACK GetFilterTable()
 {
-	LPCSTR name = "オブジェクトエクスプローラ";
-	LPCSTR information = "オブジェクトエクスプローラ 3.1.0 by 蛇色";
+	static char name[MAX_PATH] = "オブジェクトエクスプローラ";
+	static char information[MAX_PATH] = "オブジェクトエクスプローラ 3.2.0 by 蛇色";
+
+	char fileName[MAX_PATH] = {};
+	::GetModuleFileNameA(theApp.m_instance, fileName, MAX_PATH);
+	::PathStripPathA(fileName);
+	::PathRemoveExtensionA(fileName);
+	MY_TRACE_STR(fileName);
+
+	if (::lstrcmpiA(fileName, "ObjectExplorer") != 0)
+		::StringCbCopyA(name, sizeof(name), fileName);
 
 	static AviUtl::FilterPluginDLL filter =
 	{
