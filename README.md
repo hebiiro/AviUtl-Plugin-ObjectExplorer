@@ -27,10 +27,14 @@
 
 1. 上部のボタンを右クリックして「声で知らせる」を選択してチェックを外します。
 
+### コモンダイアログを使用しない
+
+1. 上部のボタンを右クリックして「コモンダイアログを使用する」を選択してチェックを外します。
+
 ### ウィンドウを増やす
 
 1. ObjectExplorer.auf と ObjectExplorer フォルダのコピーを作成する。
-2. 識別しやすい任意の名前にリネームする。
+2. 識別しやすい任意の名前 (例えばサードエクスプローラなど) にリネームする。
 
 ### お気に入りフォルダを登録する
 
@@ -75,6 +79,7 @@ ObjectExplorerSettings.xml をテキストエディタで編集します。
 
 ## 更新履歴
 
+* 3.3.0 - 2022/08/31 コモンダイアログを使用するか選べるように修正
 * 3.2.1 - 2022/08/02 ドキュメントの誤りを修正
 * 3.2.0 - 2022/07/28 エクスプローラを複数表示できるように修正
 * 3.1.0 - 2022/07/26 ツリービューの表示/非表示を切り替えられるように修正
@@ -90,14 +95,15 @@ ObjectExplorerSettings.xml をテキストエディタで編集します。
 ## 動作確認
 
 * (必須) AviUtl 1.10 & 拡張編集 0.92 http://spring-fragrance.mints.ne.jp/aviutl/
-* (共存確認) patch.aul r41 https://scrapbox.io/ePi5131/patch.aul
+* (共存確認) patch.aul r42 https://scrapbox.io/ePi5131/patch.aul
 
 ## クレジット
 
 * Microsoft Research Detours Package https://github.com/microsoft/Detours
 * aviutl_exedit_sdk https://github.com/ePi5131/aviutl_exedit_sdk
 * Common Library https://github.com/hebiiro/Common-Library
-* VOICEVOX (青山龍星) https://voicevox.hiroshiba.jp/
+* VOICEVOX https://voicevox.hiroshiba.jp/
+* VOICEVOX:青山龍星
 
 ## 作成者情報
  

@@ -347,7 +347,7 @@ BOOL saveAlias(HWND hwnd, int objectIndex, int filterIndex)
 
 //--------------------------------------------------------------------
 
-IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExEditWindowProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, AviUtl::EditHandle* editp, AviUtl::FilterPlugin* fp))
+IMPLEMENT_HOOK_PROC_NULL(BOOL, CDECL, ExEditWindowProc, (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, AviUtl::EditHandle* editp, AviUtl::FilterPlugin* fp))
 {
 	switch (message)
 	{
@@ -359,14 +359,17 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, CDECL, ExEditWindowProc, (HWND hwnd, UINT mess
 				{
 					MY_TRACE(_T("エイリアスを作成します\n"));
 
-					if (g_auin.GetSelectedObjectsCount() > 0)
+					if (!::GetProp(theApp.m_dialog, _T("usesCommonDialog")))
+						break;
+
+					if (g_auin.GetSelectedObjectCount() > 0)
 					{
-						int objectIndex = g_auin.GetSelectedObjects(0);
+						int objectIndex = g_auin.GetSelectedObject(0);
 
 						saveAlias(hwnd, objectIndex, -2);
 					}
 
-					return 0;
+					return FALSE;
 				}
 			}
 
@@ -388,6 +391,9 @@ IMPLEMENT_HOOK_PROC_NULL(LRESULT, WINAPI, SettingDialogProc, (HWND hwnd, UINT me
 			case 1109: // 『設定の保存』→『現在の設定でエイリアスを作成する』
 				{
 					MY_TRACE(_T("エイリアスを作成します\n"));
+
+					if (!::GetProp(theApp.m_dialog, _T("usesCommonDialog")))
+						break;
 
 					int objectIndex = g_auin.GetCurrentObjectIndex();
 					int filterIndex = g_auin.GetCurrentFilterIndex();

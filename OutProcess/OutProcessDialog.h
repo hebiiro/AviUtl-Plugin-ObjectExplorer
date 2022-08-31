@@ -125,6 +125,7 @@ public:
 	BOOL m_isSettingsLoaded;
 	BOOL m_isNavPaneVisible;
 	BOOL m_isVoiceEnabled;
+	BOOL m_usesCommonDialog;
 
 public:
 
@@ -165,8 +166,10 @@ protected:
 	afx_msg void OnDeleteFavorite();
 	afx_msg void OnShowNavPane();
 	afx_msg void OnPlayVoice();
+	afx_msg void OnUseCommonDialog();
 	afx_msg void OnUpdateShowNavPane(CCmdUI* pCmdUI);
 	afx_msg void OnUpdatePlayVoice(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateUseCommonDialog(CCmdUI* pCmdUI);
 	afx_msg void OnSelChangeUrl();
 	afx_msg LRESULT OnObjectExplorerResize(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnObjectExplorerExit(WPARAM wParam, LPARAM lParam);

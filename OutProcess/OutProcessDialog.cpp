@@ -24,8 +24,10 @@ BEGIN_MESSAGE_MAP(COutProcessDialog, CDialogEx)
 	ON_COMMAND(ID_DELETE_FAVORITE, &COutProcessDialog::OnDeleteFavorite)
 	ON_COMMAND(ID_SHOW_NAV_PANE, &COutProcessDialog::OnShowNavPane)
 	ON_COMMAND(ID_PLAY_VOICE, &COutProcessDialog::OnPlayVoice)
+	ON_COMMAND(ID_USE_COMMON_DIALOG, &COutProcessDialog::OnUseCommonDialog)
 	ON_UPDATE_COMMAND_UI(ID_SHOW_NAV_PANE, &COutProcessDialog::OnUpdateShowNavPane)
 	ON_UPDATE_COMMAND_UI(ID_PLAY_VOICE, &COutProcessDialog::OnUpdatePlayVoice)
+	ON_UPDATE_COMMAND_UI(ID_USE_COMMON_DIALOG, &COutProcessDialog::OnUpdateUseCommonDialog)
 	ON_CBN_SELCHANGE(IDC_URL, &COutProcessDialog::OnSelChangeUrl)
 	ON_REGISTERED_MESSAGE(WM_AVIUTL_OBJECT_EXPLORER_RESIZE, OnObjectExplorerResize)
 	ON_REGISTERED_MESSAGE(WM_AVIUTL_OBJECT_EXPLORER_EXIT, OnObjectExplorerExit)
@@ -42,6 +44,7 @@ COutProcessDialog::COutProcessDialog(CWnd* parent)
 	m_isSettingsLoaded = FALSE;
 	m_isNavPaneVisible = TRUE;
 	m_isVoiceEnabled = TRUE;
+	m_usesCommonDialog = TRUE;
 }
 
 COutProcessDialog::~COutProcessDialog()
@@ -111,6 +114,9 @@ void COutProcessDialog::loadSettings()
 
 		getPrivateProfileBool(element, L"isNavPaneVisible", m_isNavPaneVisible);
 		getPrivateProfileBool(element, L"isVoiceEnabled", m_isVoiceEnabled);
+		getPrivateProfileBool(element, L"usesCommonDialog", m_usesCommonDialog);
+
+		::SetProp(GetSafeHwnd(), _T("usesCommonDialog"), (HANDLE)m_usesCommonDialog);
 
 		_bstr_t path;
 		getPrivateProfileString(element, L"path", path);
@@ -169,6 +175,7 @@ void COutProcessDialog::saveSettings()
 		setPrivateProfileString(parentElement, L"path", (LPCTSTR)m_currentFolderPath);
 		setPrivateProfileBool(parentElement, L"isNavPaneVisible", m_isNavPaneVisible);
 		setPrivateProfileBool(parentElement, L"isVoiceEnabled", m_isVoiceEnabled);
+		setPrivateProfileBool(parentElement, L"usesCommonDialog", m_usesCommonDialog);
 
 		int c = m_url.GetCount();
 		for (int i = 0; i < c; i++)
@@ -453,6 +460,7 @@ void COutProcessDialog::OnContextMenu(CWnd* pWnd, CPoint point)
 	CMenu* subMenu = menu.GetSubMenu(0);
 	subMenu->CheckMenuItem(ID_SHOW_NAV_PANE, m_isNavPaneVisible ? MF_CHECKED : MF_UNCHECKED);
 	subMenu->CheckMenuItem(ID_PLAY_VOICE, m_isVoiceEnabled ? MF_CHECKED : MF_UNCHECKED);
+	subMenu->CheckMenuItem(ID_USE_COMMON_DIALOG, m_usesCommonDialog ? MF_CHECKED : MF_UNCHECKED);
 	subMenu->TrackPopupMenu(0, point.x, point.y, this);
 }
 
@@ -573,6 +581,22 @@ void COutProcessDialog::OnPlayVoice()
 	}
 }
 
+void COutProcessDialog::OnUseCommonDialog()
+{
+	MY_TRACE(_T("COutProcessDialog::OnUseCommonDialog()\n"));
+
+	if (m_usesCommonDialog)
+	{
+		m_usesCommonDialog = FALSE;
+	}
+	else
+	{
+		m_usesCommonDialog = TRUE;
+	}
+
+	::SetProp(GetSafeHwnd(), _T("usesCommonDialog"), (HANDLE)m_usesCommonDialog);
+}
+
 void COutProcessDialog::OnUpdateShowNavPane(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_isNavPaneVisible);
@@ -581,6 +605,11 @@ void COutProcessDialog::OnUpdateShowNavPane(CCmdUI* pCmdUI)
 void COutProcessDialog::OnUpdatePlayVoice(CCmdUI* pCmdUI)
 {
 	pCmdUI->SetCheck(m_isVoiceEnabled);
+}
+
+void COutProcessDialog::OnUpdateUseCommonDialog(CCmdUI* pCmdUI)
+{
+	pCmdUI->SetCheck(m_usesCommonDialog);
 }
 
 void COutProcessDialog::OnSelChangeUrl()
