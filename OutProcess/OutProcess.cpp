@@ -55,6 +55,17 @@ BOOL COutProcessApp::InitInstance()
 		if (!::IsWindow(m_mainProcessWindow))
 			return FALSE;
 #endif
+		DWORD pid = 0;
+		::GetWindowThreadProcessId(m_mainProcessWindow, &pid);
+		Handle process = ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+		::GetModuleFileNameEx(process, 0, m_mainProcessFileName, _countof(m_mainProcessFileName));
+		MY_TRACE_TSTR(m_mainProcessFileName);
+
+		::StringCbCopy(m_wavPlayerFileName, sizeof(m_wavPlayerFileName), m_mainProcessFileName);
+		::PathRemoveFileSpec(m_wavPlayerFileName);
+		::PathAppend(m_wavPlayerFileName, _T("WavPlayer.exe"));
+		::PathQuoteSpaces(m_wavPlayerFileName);
+		MY_TRACE_TSTR(m_wavPlayerFileName);
 	}
 
 	// OLE (COM) を初期化する。

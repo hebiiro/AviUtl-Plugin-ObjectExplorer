@@ -26,6 +26,7 @@
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
+#include <psapi.h>
 
 #include <shobjidl.h>
 _COM_SMARTPTR_TYPEDEF(IExplorerBrowser, __uuidof(IExplorerBrowser));

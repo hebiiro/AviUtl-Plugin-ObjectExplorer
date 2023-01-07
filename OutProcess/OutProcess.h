@@ -10,6 +10,8 @@ class COutProcessApp : public CWinApp
 public:
 
 	HWND m_mainProcessWindow;
+	TCHAR m_mainProcessFileName[MAX_PATH];
+	TCHAR m_wavPlayerFileName[MAX_PATH];
 	COutProcessDialog m_dialog;
 
 public:

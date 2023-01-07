@@ -286,7 +286,12 @@ void COutProcessDialog::playVoice(LPCTSTR voice)
 	if (::GetFileAttributes(wavFileName) != INVALID_FILE_ATTRIBUTES)
 	{
 		// wav ファイルを再生する。
-		::PlaySound(wavFileName, 0, SND_FILENAME | SND_ASYNC);
+
+		SHELLEXECUTEINFO sei = { sizeof(sei) };
+		sei.lpFile = theApp.m_wavPlayerFileName;
+		sei.lpParameters = wavFileName;
+		BOOL result = ::ShellExecuteEx(&sei);
+		MY_TRACE_HEX(result);
 	}
 }
 
