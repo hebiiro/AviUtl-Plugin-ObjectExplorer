@@ -108,7 +108,7 @@ BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 EXTERN_C AviUtl::FilterPluginDLL* CALLBACK GetFilterTable()
 {
 	static char name[MAX_PATH] = "オブジェクトエクスプローラ";
-	static char information[MAX_PATH] = "オブジェクトエクスプローラ 3.3.0 by 蛇色";
+	static char information[MAX_PATH] = "オブジェクトエクスプローラ 3.5.0 by 蛇色";
 
 	char fileName[MAX_PATH] = {};
 	::GetModuleFileNameA(theApp.m_instance, fileName, MAX_PATH);
@@ -122,11 +122,11 @@ EXTERN_C AviUtl::FilterPluginDLL* CALLBACK GetFilterTable()
 	static AviUtl::FilterPluginDLL filter =
 	{
 		.flag =
-			AviUtl::detail::FilterPluginFlag::AlwaysActive |
-			AviUtl::detail::FilterPluginFlag::DispFilter |
-			AviUtl::detail::FilterPluginFlag::WindowThickFrame |
-			AviUtl::detail::FilterPluginFlag::WindowSize |
-			AviUtl::detail::FilterPluginFlag::ExInformation,
+			AviUtl::FilterPlugin::Flag::AlwaysActive |
+			AviUtl::FilterPlugin::Flag::DispFilter |
+			AviUtl::FilterPlugin::Flag::WindowThickFrame |
+			AviUtl::FilterPlugin::Flag::WindowSize |
+			AviUtl::FilterPlugin::Flag::ExInformation,
 		.x = 400,
 		.y = 400,
 		.name = name,

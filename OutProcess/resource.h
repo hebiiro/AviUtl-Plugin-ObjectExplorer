@@ -11,6 +11,7 @@
 #define IDC_GET                         1004
 #define IDC_PLACE_HOLDER                1005
 #define IDC_URL                         1006
+#define IDC_SEARCH                      1007
 #define ID_ADD_FAVORITE                 32773
 #define ID_DELETE_FAVORITE              32774
 #define ID_SHOW_NAV_PANE                32777

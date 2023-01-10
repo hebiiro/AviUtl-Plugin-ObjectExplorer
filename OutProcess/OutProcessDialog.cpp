@@ -41,6 +41,7 @@ COutProcessDialog::COutProcessDialog(CWnd* parent)
 	MY_TRACE(_T("COutProcessDialog::COutProcessDialog()\n"));
 
 	m_cookie = 0;
+	m_shellView = 0;
 	m_isSettingsLoaded = FALSE;
 	m_isNavPaneVisible = TRUE;
 	m_isVoiceEnabled = TRUE;
@@ -219,6 +220,10 @@ void COutProcessDialog::createExplorer()
 	// ハンドラを追加する。
 	hr = ::IUnknown_SetSite(m_explorer, static_cast<IServiceProvider*>(this));
 	hr = m_explorer->Advise(static_cast<IExplorerBrowserEvents*>(this), &m_cookie);
+	IFolderFilterSitePtr folderFilterSite = m_explorer;
+	MY_TRACE_HEX(folderFilterSite.GetInterfacePtr());
+	hr = folderFilterSite->SetFilter(static_cast<IFolderFilter*>(this));
+	MY_TRACE_COM_ERROR(hr);
 
 	if (m_isNavPaneVisible)
 	{
@@ -260,11 +265,36 @@ void COutProcessDialog::browseToPath(LPCTSTR path)
 {
 	MY_TRACE(_T("COutProcessDialog::browseToPath(%s)\n"), path);
 
-	PIDLIST_ABSOLUTE pidl = ::ILCreateFromPath(path);
-	if (pidl)
+	if (::lstrcmpi(path, m_currentFolderPath) == 0)
 	{
-		m_explorer->BrowseToIDList(pidl, SBSP_ABSOLUTE);
-		::ILFree(pidl);
+		// 現在のフォルダを再読み込みする。
+
+#if 1
+		if (m_shellView)
+		{
+			HRESULT hr = m_shellView->Refresh();
+			MY_TRACE_COM_ERROR(hr);
+		}
+#else
+		IShellViewPtr currentView;
+		HRESULT hr = m_explorer->GetCurrentView(IID_PPV_ARGS(&currentView));
+		if (currentView)
+		{
+			HRESULT hr = currentView->Refresh();
+			MY_TRACE_COM_ERROR(hr);
+		}
+#endif
+	}
+	else
+	{
+		// 指定されたフォルダを表示する。
+
+		PIDLIST_ABSOLUTE pidl = ::ILCreateFromPath(path);
+		if (pidl)
+		{
+			m_explorer->BrowseToIDList(pidl, SBSP_ABSOLUTE | SBSP_SAMEBROWSER);
+			::ILFree(pidl);
+		}
 	}
 }
 
@@ -303,13 +333,18 @@ void COutProcessDialog::DoDataExchange(CDataExchange* pDX)
 
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_URL, m_url);
+	DDX_Control(pDX, IDC_SEARCH, m_search);
 }
 
 BOOL COutProcessDialog::PreTranslateMessage(MSG* pMsg)
 {
+#if 1
+	if (m_shellView && m_shellView->TranslateAccelerator(pMsg) == S_OK)
+#else
 	IShellViewPtr currentView;
 	HRESULT hr = m_explorer->GetCurrentView(IID_PPV_ARGS(&currentView));
 	if (currentView && currentView->TranslateAccelerator(pMsg) == S_OK)
+#endif
 		return TRUE;
 
 	return CDialogEx::PreTranslateMessage(pMsg);
@@ -444,12 +479,22 @@ void COutProcessDialog::OnAppCommand(CWnd* pWnd, UINT nCmd, UINT nDevice, UINT n
 	{
 	case APPCOMMAND_BROWSER_BACKWARD:
 		{
+			MY_TRACE(_T("APPCOMMAND_BROWSER_BACKWARD\n"));
+
 			OnClickedPrev();
 			break;
 		}
 	case APPCOMMAND_BROWSER_FORWARD:
 		{
+			MY_TRACE(_T("APPCOMMAND_BROWSER_FORWARD\n"));
+
 			OnClickedNext();
+			break;
+		}
+	case APPCOMMAND_BROWSER_REFRESH:
+		{
+			MY_TRACE(_T("APPCOMMAND_BROWSER_REFRESH\n"));
+
 			break;
 		}
 	}

@@ -7,6 +7,7 @@ class COutProcessDialog
 	, public IServiceProvider
 	, public IExplorerBrowserEvents
 	, public IExplorerPaneVisibility
+	, public IFolderFilter
 {
 public:
 
@@ -27,6 +28,10 @@ public:
 		else if (::IsEqualIID(iid, IID_IExplorerPaneVisibility))
 		{
 			*ppv = static_cast<IExplorerPaneVisibility*>(this);
+		}
+		else if (::IsEqualIID(iid, IID_IFolderFilter))
+		{
+			*ppv = static_cast<IFolderFilter*>(this);
 		}
 		else
 		{
@@ -70,6 +75,8 @@ public:
 	{
 		MY_TRACE(_T("COutProcessDialog::OnViewCreated()\n"));
 
+		m_shellView = shellView;
+
 		return S_OK;
 	}
         
@@ -110,6 +117,55 @@ public:
 		return S_OK;
 	}
 
+	virtual HRESULT STDMETHODCALLTYPE ShouldShow( 
+		/* [in] */ __RPC__in_opt IShellFolder *psf,
+		/* [unique][in] */ __RPC__in_opt PCIDLIST_ABSOLUTE pidlFolder,
+		/* [in] */ __RPC__in PCUITEMID_CHILD pidlItem)
+	{
+		IShellItemPtr si;
+		HRESULT hr = ::SHCreateItemWithParent(0, psf, pidlItem, IID_PPV_ARGS(&si));
+
+		LPWSTR displayName = 0;
+		si->GetDisplayName(SIGDN_NORMALDISPLAY, &displayName);
+
+		SFGAOF attributes = 0;
+		si->GetAttributes(SFGAO_FOLDER, &attributes);
+
+		MY_TRACE(_T("COutProcessDialog::ShouldShow(%ws, 0x%08X)\n"), displayName, attributes);
+
+		WCHAR searchString[MAX_PATH] = {};
+		::GetWindowTextW(m_search, searchString, MAX_PATH);
+
+		HRESULT retValue = S_OK;
+
+		if (attributes & SFGAO_FOLDER)
+		{
+			// フォルダの場合
+		}
+		else
+		{
+			// ファイルの場合
+
+			if (::lstrlenW(searchString) != 0)
+				retValue = ::StrStrIW(displayName, searchString) ? S_OK : S_FALSE;
+		}
+
+		::CoTaskMemFree(displayName);
+
+		return retValue;
+	}
+        
+	virtual HRESULT STDMETHODCALLTYPE GetEnumFlags( 
+		/* [in] */ __RPC__in_opt IShellFolder *psf,
+		/* [in] */ __RPC__in PCIDLIST_ABSOLUTE pidlFolder,
+		/* [out] */ __RPC__deref_out_opt HWND *phwnd,
+		/* [out][in] */ __RPC__inout DWORD *pgrfFlags)
+	{
+		MY_TRACE(_T("COutProcessDialog::GetEnumFlags()\n"));
+
+		return S_OK;
+	}
+
 public:
 
 	static const int TIMER_ID_CHECK_MAIN_PROCESS = 2021;
@@ -120,8 +176,10 @@ public:
 	FileUpdateCheckerPtr m_fileUpdateChecker;
 	IExplorerBrowserPtr m_explorer;
 	DWORD m_cookie;
+	IShellView* m_shellView;
 	CString m_currentFolderPath;
 	CComboBox m_url;
+	CEdit m_search;
 	BOOL m_isSettingsLoaded;
 	BOOL m_isNavPaneVisible;
 	BOOL m_isVoiceEnabled;

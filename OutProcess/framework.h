@@ -32,6 +32,7 @@ using namespace Gdiplus;
 _COM_SMARTPTR_TYPEDEF(IExplorerBrowser, __uuidof(IExplorerBrowser));
 _COM_SMARTPTR_TYPEDEF(IExplorerPaneVisibility, __uuidof(IExplorerPaneVisibility));
 _COM_SMARTPTR_TYPEDEF(IShellItem, __uuidof(IShellItem));
+_COM_SMARTPTR_TYPEDEF(IFolderFilterSite, __uuidof(IFolderFilterSite));
 
 #import <msxml3.dll>
 
