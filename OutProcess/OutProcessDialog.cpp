@@ -41,7 +41,6 @@ COutProcessDialog::COutProcessDialog(CWnd* parent)
 	MY_TRACE(_T("COutProcessDialog::COutProcessDialog()\n"));
 
 	m_cookie = 0;
-	m_shellView = 0;
 	m_isSettingsLoaded = FALSE;
 	m_isNavPaneVisible = TRUE;
 	m_isVoiceEnabled = TRUE;
@@ -232,24 +231,30 @@ void COutProcessDialog::createExplorer()
 	}
 
 	CString url; m_url.GetWindowText(url);
+	MY_TRACE_TSTR((LPCTSTR)url);
 
-	if (url.IsEmpty())
 	{
+		// 一旦デスクトップを表示する。
+		// こうしないと次の browseToPath(url) でフリーズする。
+
 		PIDLIST_ABSOLUTE pidlDesktop;
 		::SHGetKnownFolderIDList(FOLDERID_Desktop, 0, NULL, &pidlDesktop);
 		m_explorer->BrowseToIDList(pidlDesktop, SBSP_ABSOLUTE);
 		::ILFree(pidlDesktop);
 	}
-	else
-	{
+
+	if (!url.IsEmpty())
 		browseToPath(url);
-	}
 
 	// エクスプローラの初期化が完了したことを通知する。
 	IShellBrowserPtr browser = m_explorer;
+	MY_TRACE_HEX(browser.GetInterfacePtr());
 	HWND hwnd = 0;
 	browser->GetWindow(&hwnd);
+	MY_TRACE_HEX(hwnd);
 	::PostMessage(theApp.getFilterWindow(), WM_AVIUTL_OBJECT_EXPLORER_INITED, (WPARAM)GetSafeHwnd(), (LPARAM)hwnd);
+
+	MY_TRACE(_T("COutProcessDialog::createExplorer() end\n"));
 }
 
 void COutProcessDialog::destroyExplorer()
@@ -257,8 +262,11 @@ void COutProcessDialog::destroyExplorer()
 	MY_TRACE(_T("COutProcessDialog::destroyExplorer()\n"));
 
 	m_explorer->Unadvise(m_cookie);
+	::IUnknown_SetSite(m_explorer, 0);
 	m_explorer->Destroy();
 	m_explorer = 0;
+
+	MY_TRACE(_T("COutProcessDialog::destroyExplorer() end\n"));
 }
 
 void COutProcessDialog::browseToPath(LPCTSTR path)
@@ -269,13 +277,6 @@ void COutProcessDialog::browseToPath(LPCTSTR path)
 	{
 		// 現在のフォルダを再読み込みする。
 
-#if 1
-		if (m_shellView)
-		{
-			HRESULT hr = m_shellView->Refresh();
-			MY_TRACE_COM_ERROR(hr);
-		}
-#else
 		IShellViewPtr currentView;
 		HRESULT hr = m_explorer->GetCurrentView(IID_PPV_ARGS(&currentView));
 		if (currentView)
@@ -283,7 +284,6 @@ void COutProcessDialog::browseToPath(LPCTSTR path)
 			HRESULT hr = currentView->Refresh();
 			MY_TRACE_COM_ERROR(hr);
 		}
-#endif
 	}
 	else
 	{
@@ -338,14 +338,37 @@ void COutProcessDialog::DoDataExchange(CDataExchange* pDX)
 
 BOOL COutProcessDialog::PreTranslateMessage(MSG* pMsg)
 {
-#if 1
-	if (m_shellView && m_shellView->TranslateAccelerator(pMsg) == S_OK)
-#else
 	IShellViewPtr currentView;
 	HRESULT hr = m_explorer->GetCurrentView(IID_PPV_ARGS(&currentView));
 	if (currentView && currentView->TranslateAccelerator(pMsg) == S_OK)
-#endif
 		return TRUE;
+
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		switch (pMsg->wParam)
+		{
+		case _T('F'):
+			{
+				if (::GetKeyState(VK_CONTROL) < 0)
+				{
+					m_search.SetFocus();
+					return TRUE;
+				}
+
+				break;
+			}
+		case _T('G'):
+			{
+				if (::GetKeyState(VK_CONTROL) < 0)
+				{
+					m_url.SetFocus();
+					return TRUE;
+				}
+
+				break;
+			}
+		}
+	}
 
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
@@ -697,7 +720,14 @@ LRESULT COutProcessDialog::OnObjectExplorerExit(WPARAM wParam, LPARAM lParam)
 {
 	MY_TRACE(_T("COutProcessDialog::OnObjectExplorerExit(0x%08X, 0x%08X)\n"), wParam, lParam);
 
-	DestroyWindow();
+	// 設定をファイルに保存する。
+	saveSettings();
+
+	MY_TRACE(_T("プロセスを強制終了します\n"));
+
+	// 外部プロセスからダイアログを削除されるとどうしようもないので
+	// ここでプロセスを強制終了する。
+	::TerminateProcess(::GetCurrentProcess(), 1000);
 
 	return 0;
 }

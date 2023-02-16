@@ -116,7 +116,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
+      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test_psd\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -144,7 +144,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
+      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test_psd\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -176,7 +176,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
+      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test_psd\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -208,7 +208,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
+      <Command>copy /B /Y "$(TargetDir)$(TargetFileName)" "C:\AviUtl110_test_psd\Plugins\ObjectExplorer\ObjectExplorer.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

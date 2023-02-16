@@ -75,8 +75,6 @@ public:
 	{
 		MY_TRACE(_T("COutProcessDialog::OnViewCreated()\n"));
 
-		m_shellView = shellView;
-
 		return S_OK;
 	}
         
@@ -176,7 +174,6 @@ public:
 	FileUpdateCheckerPtr m_fileUpdateChecker;
 	IExplorerBrowserPtr m_explorer;
 	DWORD m_cookie;
-	IShellView* m_shellView;
 	CString m_currentFolderPath;
 	CComboBox m_url;
 	CEdit m_search;
