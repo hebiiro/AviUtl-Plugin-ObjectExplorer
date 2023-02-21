@@ -42,6 +42,18 @@ HWND COutProcessApp::getFilterWindow()
 	return m_mainProcessWindow;
 }
 
+void CALLBACK COutProcessApp::timerProc(HWND hwnd, UINT message, UINT_PTR timerId, DWORD time)
+{
+#ifdef OBJECT_EXPLORER_CHECK_MAIN_PROCESS
+	if (!::IsWindow(theApp.m_mainProcessWindow))
+	{
+		MY_TRACE(_T("メインプロセスのウィンドウが無効になりました\n"));
+
+		::PostQuitMessage(0);
+	}
+#endif
+}
+
 BOOL COutProcessApp::InitInstance()
 {
 	CWinApp::InitInstance();
@@ -72,7 +84,6 @@ BOOL COutProcessApp::InitInstance()
 	if (!AfxOleInit())
 	{
 		AfxMessageBox(_T("AfxOleInit() failed."));
-
 		return FALSE;
 	}
 
@@ -82,12 +93,15 @@ BOOL COutProcessApp::InitInstance()
 	if (!m_dialog.Create(IDD_OUT_PROCESS, parent))
 	{
 		AfxMessageBox(_T("dialog.Create(IDD_OUT_PROCESS) failed."));
+		return FALSE;
 	}
-	else
-	{
-		// メッセージループを開始する。
-		m_dialog.RunModalLoop(MLF_NOKICKIDLE);
-	}
+
+	// メインプロセスを監視するタイマーを作成する。
+	::SetTimer(0, 0, 1000, timerProc);
+
+	// メッセージループを開始する。
+	m_dialog.RunModalLoop(MLF_NOKICKIDLE);
+
 #if !defined(_AFXDLL) && !defined(_AFX_NO_MFC_CONTROLS_IN_DIALOGS)
 	ControlBarCleanUp();
 #endif

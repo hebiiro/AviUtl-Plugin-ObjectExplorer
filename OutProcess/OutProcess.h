@@ -22,6 +22,8 @@ public:
 	HWND getAviUtlWindow();
 	HWND getFilterWindow();
 
+	static void CALLBACK timerProc(HWND hwnd, UINT message, UINT_PTR timerId, DWORD time);
+
 	void postMessage(UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		::PostMessage(m_mainProcessWindow, message, wParam, lParam);

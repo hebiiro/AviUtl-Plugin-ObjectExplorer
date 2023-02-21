@@ -166,7 +166,6 @@ public:
 
 public:
 
-	static const int TIMER_ID_CHECK_MAIN_PROCESS = 2021;
 	static const int TIMER_ID_CHECK_SETTING_FILE = 2022;
 
 public:

@@ -305,6 +305,10 @@ void COutProcessDialog::playVoice(LPCTSTR voice)
 	if (!m_isVoiceEnabled)
 		return;
 
+	// WavPlayer が存在するかチェックする。
+	if (::GetFileAttributes(theApp.m_wavPlayerFileName) == INVALID_FILE_ATTRIBUTES)
+		return;
+
 	// wav ファイルのパスを取得する。
 	TCHAR wavFileName[MAX_PATH] = {};
 	::GetModuleFileName(AfxGetInstanceHandle(), wavFileName, MAX_PATH);
@@ -312,17 +316,16 @@ void COutProcessDialog::playVoice(LPCTSTR voice)
 	::PathAppend(wavFileName, voice);
 	MY_TRACE_TSTR(wavFileName);
 
-	// ファイルが存在するなら
-	if (::GetFileAttributes(wavFileName) != INVALID_FILE_ATTRIBUTES)
-	{
-		// wav ファイルを再生する。
+	// wav ファイルが存在するかチェックする。
+	if (::GetFileAttributes(wavFileName) == INVALID_FILE_ATTRIBUTES)
+		return;
 
-		SHELLEXECUTEINFO sei = { sizeof(sei) };
-		sei.lpFile = theApp.m_wavPlayerFileName;
-		sei.lpParameters = wavFileName;
-		BOOL result = ::ShellExecuteEx(&sei);
-		MY_TRACE_HEX(result);
-	}
+	// wav ファイルを再生する。
+	SHELLEXECUTEINFO sei = { sizeof(sei) };
+	sei.lpFile = theApp.m_wavPlayerFileName;
+	sei.lpParameters = wavFileName;
+	BOOL result = ::ShellExecuteEx(&sei);
+	MY_TRACE_HEX(result);
 }
 
 //--------------------------------------------------------------------
@@ -433,18 +436,13 @@ int COutProcessDialog::OnCreate(LPCREATESTRUCT cs)
 	m_fileUpdateChecker.reset(new FileUpdateChecker(filePath));
 
 	SetTimer(TIMER_ID_CHECK_SETTING_FILE, 1000, 0);
-#ifdef OBJECT_EXPLORER_CHECK_MAIN_PROCESS
-	SetTimer(TIMER_ID_CHECK_MAIN_PROCESS, 1000, 0);
-#endif
+
 	return 0;
 }
 
 void COutProcessDialog::OnDestroy()
 {
 	MY_TRACE(_T("COutProcessDialog::OnDestroy()\n"));
-
-	// 監視タイマーを終了させる。
-	KillTimer(TIMER_ID_CHECK_MAIN_PROCESS);
 
 	// 設定をファイルに保存する。
 	saveSettings();
@@ -459,16 +457,6 @@ void COutProcessDialog::OnTimer(UINT_PTR timerId)
 {
 	switch (timerId)
 	{
-	case TIMER_ID_CHECK_MAIN_PROCESS:
-		{
-			if (!::IsWindow(theApp.m_mainProcessWindow))
-			{
-				KillTimer(TIMER_ID_CHECK_MAIN_PROCESS);
-				PostQuitMessage(0);
-			}
-
-			break;
-		}
 	case TIMER_ID_CHECK_SETTING_FILE:
 		{
 			if (m_fileUpdateChecker->isFileUpdated())
