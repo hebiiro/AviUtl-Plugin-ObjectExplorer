@@ -8,13 +8,14 @@
     <Filter Include="Common">
       <UniqueIdentifier>{79bae488-39c4-4741-beda-1e2ee6428bed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{ef196aeb-4d3b-44f4-a2f6-da9454637908}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
       <Filter>リソース</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="..\Common\ObjectExplorer.h">
       <Filter>Common</Filter>
     </ClInclude>
@@ -29,16 +30,29 @@
     <ClInclude Include="..\..\Common\Tracer.h">
       <Filter>Common</Filter>
     </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
     <ClCompile Include="InProcess.cpp" />
     <ClCompile Include="InProcess_Filter.cpp" />
     <ClCompile Include="InProcess_Hook.cpp" />
+    <ClCompile Include="pch.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="InProcess.rc">
       <Filter>リソース</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="InProcess.def">
+      <Filter>Framework</Filter>
+    </None>
   </ItemGroup>
 </Project>

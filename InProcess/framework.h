@@ -9,9 +9,10 @@
 #include <commdlg.h>
 #pragma comment(lib, "comdlg32.lib")
 #include <shellapi.h>
+#include <strsafe.h>
 
 #include <tchar.h>
-#include <strsafe.h>
+#include <clocale>
 #include <algorithm>
 #include <memory>
 #include <string>

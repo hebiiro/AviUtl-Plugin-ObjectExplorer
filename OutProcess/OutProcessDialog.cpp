@@ -243,8 +243,12 @@ void COutProcessDialog::createExplorer()
 		::ILFree(pidlDesktop);
 	}
 
+	MY_TRACE(_T("URL に移動します\n"));
+
 	if (!url.IsEmpty())
 		browseToPath(url);
+
+	MY_TRACE(_T("エクスプローラの初期化が完了したことを通知します\n"));
 
 	// エクスプローラの初期化が完了したことを通知する。
 	IShellBrowserPtr browser = m_explorer;
@@ -265,6 +269,7 @@ void COutProcessDialog::destroyExplorer()
 	::IUnknown_SetSite(m_explorer, 0);
 	m_explorer->Destroy();
 	m_explorer = 0;
+	m_shellView = 0;
 
 	MY_TRACE(_T("COutProcessDialog::destroyExplorer() end\n"));
 }
@@ -277,11 +282,9 @@ void COutProcessDialog::browseToPath(LPCTSTR path)
 	{
 		// 現在のフォルダを再読み込みする。
 
-		IShellViewPtr currentView;
-		HRESULT hr = m_explorer->GetCurrentView(IID_PPV_ARGS(&currentView));
-		if (currentView)
+		if (m_shellView)
 		{
-			HRESULT hr = currentView->Refresh();
+			HRESULT hr = m_shellView->Refresh();
 			MY_TRACE_COM_ERROR(hr);
 		}
 	}
@@ -341,9 +344,7 @@ void COutProcessDialog::DoDataExchange(CDataExchange* pDX)
 
 BOOL COutProcessDialog::PreTranslateMessage(MSG* pMsg)
 {
-	IShellViewPtr currentView;
-	HRESULT hr = m_explorer->GetCurrentView(IID_PPV_ARGS(&currentView));
-	if (currentView && currentView->TranslateAccelerator(pMsg) == S_OK)
+	if (m_shellView && m_shellView->TranslateAccelerator(pMsg) == S_OK)
 		return TRUE;
 
 	if (pMsg->message == WM_KEYDOWN)
@@ -698,6 +699,7 @@ LRESULT COutProcessDialog::OnObjectExplorerResize(WPARAM wParam, LPARAM lParam)
 	if (parent)
 	{
 		CRect rc; parent->GetClientRect(&rc);
+		MY_TRACE_RECT2(rc);
 		SetWindowPos(0, rc.left, rc.top, rc.Width(), rc.Height(), SWP_NOZORDER);
 	}
 

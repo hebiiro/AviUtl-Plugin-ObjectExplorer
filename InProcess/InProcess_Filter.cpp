@@ -82,25 +82,7 @@ BOOL func_WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, AviUtl:
 
 BOOL APIENTRY DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
-	switch (reason)
-	{
-	case DLL_PROCESS_ATTACH:
-		{
-			MY_TRACE(_T("DLL_PROCESS_ATTACH\n"));
-
-			theApp.dllInit(instance);
-
-			break;
-		}
-	case DLL_PROCESS_DETACH:
-		{
-			MY_TRACE(_T("DLL_PROCESS_DETACH\n"));
-
-			break;
-		}
-	}
-
-	return TRUE;
+	return theApp.dllMain(instance, reason, reserved);
 }
 
 //--------------------------------------------------------------------

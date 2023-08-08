@@ -16,22 +16,38 @@ void ___outputLog(LPCTSTR text, LPCTSTR output)
 
 CInProcessApp::CInProcessApp()
 {
-	m_instance = 0;
-	::ZeroMemory(&m_pi, sizeof(m_pi));
-	m_dialog = 0;
-	m_browser = 0;
 }
 
 CInProcessApp::~CInProcessApp()
 {
 }
 
-void CInProcessApp::dllInit(HINSTANCE instance)
+BOOL CInProcessApp::dllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
-	MY_TRACE(_T("CInProcessApp::dllInit(0x%08p)\n"), instance);
+	switch (reason)
+	{
+	case DLL_PROCESS_ATTACH:
+		{
+			// ロケールを設定する。
+			// これをやらないと日本語テキストが文字化けするので最初に実行する。
+			_tsetlocale(LC_CTYPE, _T(""));
 
-	m_instance = instance;
-	MY_TRACE_HEX(m_instance);
+			MY_TRACE(_T("DLL_PROCESS_ATTACH\n"));
+
+			m_instance = instance;
+			MY_TRACE_HEX(m_instance);
+
+			break;
+		}
+	case DLL_PROCESS_DETACH:
+		{
+			MY_TRACE(_T("DLL_PROCESS_DETACH\n"));
+
+			break;
+		}
+	}
+
+	return TRUE;
 }
 
 BOOL CInProcessApp::init(AviUtl::FilterPlugin* fp)

@@ -217,6 +217,9 @@
       <Project>{18580d96-e991-4801-8055-dc2ea476a040}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="InProcess.def" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

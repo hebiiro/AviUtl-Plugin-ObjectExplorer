@@ -75,6 +75,8 @@ public:
 	{
 		MY_TRACE(_T("COutProcessDialog::OnViewCreated()\n"));
 
+		m_shellView = shellView;
+
 		return S_OK;
 	}
         
@@ -106,7 +108,18 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE GetPaneState(REFEXPLORERPANE ep, EXPLORERPANESTATE* peps)
 	{
 		MY_TRACE(_T("COutProcessDialog::GetPaneState()\n"));
-
+#if 0
+		if (ep == EP_NavPane) MY_TRACE(_T("EP_NavPane\n"));
+		else if (ep == EP_Commands) MY_TRACE(_T("EP_Commands\n"));
+		else if (ep == EP_Commands_Organize) MY_TRACE(_T("EP_Commands_Organize\n"));
+		else if (ep == EP_Commands_View) MY_TRACE(_T("EP_Commands_View\n"));
+		else if (ep == EP_DetailsPane) MY_TRACE(_T("EP_DetailsPane\n"));
+		else if (ep == EP_PreviewPane) MY_TRACE(_T("EP_PreviewPane\n"));
+		else if (ep == EP_QueryPane) MY_TRACE(_T("EP_QueryPane\n"));
+		else if (ep == EP_AdvQueryPane) MY_TRACE(_T("EP_AdvQueryPane\n"));
+		else if (ep == EP_StatusBar) MY_TRACE(_T("EP_StatusBar\n"));
+		else if (ep == EP_Ribbon) MY_TRACE(_T("EP_Ribbon\n"));
+#endif
 		if (ep == EP_NavPane)
 			*peps = EPS_DEFAULT_ON;
 		else
@@ -172,6 +185,7 @@ public:
 
 	FileUpdateCheckerPtr m_fileUpdateChecker;
 	IExplorerBrowserPtr m_explorer;
+	IShellViewPtr m_shellView;
 	DWORD m_cookie;
 	CString m_currentFolderPath;
 	CComboBox m_url;
